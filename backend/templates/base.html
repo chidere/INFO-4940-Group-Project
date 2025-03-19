@@ -1,55 +1,59 @@
 <!doctype html>
-<title>{% block title %}{% endblock %} - Flaskr</title>
+<title>{% block title %}{% endblock %} - Roast-It: The Search Engine That Hates You</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Kanit&family=Montserrat&family=Open+Sans:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Open+Sans:wght@500&display=swap" rel="stylesheet">
+
 <body>
     <div class="full-body-container">
         <div class="top-text">
-            <div class="google-colors">
-                <h1 id="google-4">4</h1>
-                <h1 id="google-3">3</h1>
-                <h1 id="google-0-1">0</h1>
-                <h1 id="google-0-2">0</h1>
+            <div class="roast-it-title" id="roast-logo">
+                <h1 id="roast-r">R</h1>
+                <h1 id="roast-o">O</h1>
+                <h1 id="roast-a">A</h1>
+                <h1 id="roast-s">S</h1>
+                <h1 id="roast-t">T</h1>
+                <h1 id="roast-it">-IT</h1>
+                <!-- Explosion Effect -->
+                <span class="explosion"></span>
+                <span class="explosion"></span>
+                <span class="explosion"></span>
+                <span class="explosion"></span>
             </div>
             <div class="input-box" onclick="sendFocus()">
-                <img src="{{ url_for('static', filename='images/mag.png') }}" />
-                <input placeholder="Search for a Keeping up with the Kardashians episode" id="filter-text-val" onkeyup="filterText()">
+                <img src="{{ url_for('static', filename='images/mic.png') }}" />
+                <input placeholder="Go ahead, embarrass yourself..." id="filter-text-val" onkeyup="filterText()">
             </div>
         </div>
-        <div id="answer-box">
-
-        </div>
+        <div id="answer-box"></div>
     </div>
 
     <script>
-
-        function answerBoxTemplate(title,titleDesc,rating){
-            return `<div class=''>
-                <h3 class='episode-title'>${title}</h3>
-                <p class='episode-desc'>${titleDesc}</p>
-                <p class='episode-rating'>IMDB Rating: ${rating}</p>
-            </div>`
+        function answerBoxTemplate(roast, jokes) {
+            return `<div class='response-container'>
+                <h3 class='roast'>🔥 ${roast} 🔥</h3>
+                <ul class='jokes'>
+                    ${jokes.length > 0 ? jokes.map(joke => `<li>😂 ${joke}</li>`).join('') : "<li>No jokes found. Not even AI can help your humor.</li>"}
+                </ul>
+            </div>`;
         }
 
-        function sendFocus(){
-            document.getElementById('filter-text-val').focus()
+        function sendFocus() {
+            document.getElementById('filter-text-val').focus();
         }
 
-        function filterText(){
-            document.getElementById("answer-box").innerHTML = ""
-            console.log(document.getElementById("filter-text-val").value)
-            fetch("/episodes?" + new URLSearchParams({ title: document.getElementById("filter-text-val").value }).toString())
-            .then((response) => response.json())
-            .then((data) => data.forEach(row => {
-                
-                let tempDiv = document.createElement("div")
-                tempDiv.innerHTML = answerBoxTemplate(row.title,row.descr,row.imdb_rating)
-                document.getElementById("answer-box").appendChild(tempDiv)
-            }));
-
-        }
+        function filterText() {
+            document.getElementById("answer-box").innerHTML = "";
+            let query = document.getElementById("filter-text-val").value;
             
+            fetch("/roast-it?" + new URLSearchParams({ query: query }).toString())
+            .then((response) => response.json())
+            .then((data) => {
+                let tempDiv = document.createElement("div");
+                tempDiv.innerHTML = answerBoxTemplate(data.roast, data.jokes);
+                document.getElementById("answer-box").appendChild(tempDiv);
+            });
+        }
     </script>
 </body>
