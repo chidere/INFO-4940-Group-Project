@@ -18,8 +18,10 @@ json_file_path = os.path.join(current_directory, 'init.json')
 # Assuming your JSON data is stored in a file named 'init.json'
 with open(json_file_path, 'r') as file:
     data = json.load(file)
-    episodes_df = pd.DataFrame(data['episodes'])
-    reviews_df = pd.DataFrame(data['reviews'])
+    reddit_df = pd.DataFrame(data['reddit'])
+    stupidstuff_df = pd.DataFrame(data['stupidstuff'])
+    wocka_df = pd.DataFrame(data['wocka'])
+
 
 app = Flask(__name__)
 CORS(app)
