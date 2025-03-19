@@ -18,7 +18,7 @@ json_file_path = os.path.join(current_directory, 'init.json')
 # Assuming your JSON data is stored in a file named 'init.json'
 with open(json_file_path, 'r') as file:
     data = json.load(file)
-    reddit_df = pd.DataFrame(data['reddit'])
+    reddit_df = pd.DataFrame(data['reddit_jokes'])
     stupidstuff_df = pd.DataFrame(data['stupidstuff'])
     wocka_df = pd.DataFrame(data['wocka'])
 
