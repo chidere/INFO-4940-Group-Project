@@ -3,6 +3,7 @@ env/
 Docker/__pycache__
 
 venv/
+roastit/
 
 *.pyc
 __pycache__/

@@ -14,8 +14,6 @@ class QueryProcessor:
   """
   def __init__(self):
     """Initialize the query processor with necessary tools."""
-    self.stop_words = set(stopwords.words('english'))
-    self.lemmatizer = WordNetLemmatizer()
     self.humor_categories = {
       'pun': ['pun', 'wordplay', 'play on words'],
       'one-liner': ['one liner', 'one-liner', 'short', 'quick'],
