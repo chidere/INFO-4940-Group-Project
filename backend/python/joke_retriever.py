@@ -1,4 +1,4 @@
-from query_processing import QueryProcessor
+from python.query_processing import QueryProcessor
 
 def retrieve_jokes(category, dataset, inappropriate_words):
     """Retrieves jokes based on the category while filtering out inappropriate content."""
