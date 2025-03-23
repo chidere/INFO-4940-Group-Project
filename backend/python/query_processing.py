@@ -43,12 +43,8 @@ class QueryProcessor:
     """
     query = query.lower()
     query = re.sub(r'[^a-zA-Z\s]', '', query)
-    tokens = word_tokenize(query)
-    processed_tokens = [
-      self.lemmatizer.lemmatize(token) for token in tokens 
-      if token not in self.stop_words
-    ]
-    return ' '.join(processed_tokens)
+    tokens = query.split()
+    return ' '.join(tokens)
   
   def extract_keywords(self, query):
     """
