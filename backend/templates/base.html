@@ -1,120 +1,196 @@
 <!doctype html>
-<title>{% block title %}{% endblock %} - Roast-It: The Search Engine That Hates You</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Open+Sans:wght@500&display=swap" rel="stylesheet">
+<html lang="en">
+<head>
+  <title>{% block title %}{% endblock %} - Roast-It: The Search Engine That Hates You</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Open+Sans:wght@500&display=swap" rel="stylesheet">
+  <style>
+    .search-container {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+        max-width: 700px;
+        margin: 0 auto;
+        gap: 10px;
+    }
 
+    .input-box {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        background-color: white;
+        padding: 0 10px;
+        border-radius: 5px;
+    }
+
+    .input-box img {
+        height: 20px;
+        margin-right: 10px;
+    }
+
+    .input-box input {
+        border: none;
+        flex-grow: 1;
+        padding: 10px;
+        font-family: 'Open Sans', sans-serif;
+        font-size: 16px;
+        outline: none;
+    }
+
+    select {
+        padding: 8px;
+        font-family: 'Open Sans', sans-serif;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+
+    #search-button {
+        background-color: #ff6b6b;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-family: 'Open Sans', sans-serif;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    #search-button:hover {
+        background-color: #ff5252;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 20px;
+        font-family: 'Open Sans', sans-serif;
+        color: #666;
+    }
+
+    .error {
+        text-align: center;
+        padding: 20px;
+        font-family: 'Open Sans', sans-serif;
+        color: #ff5252;
+    }
+
+    .response-container {
+        margin: 20px auto;
+        max-width: 700px;
+        font-family: 'Open Sans', sans-serif;
+    }
+
+    .response-container ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .response-container li {
+        background: #f9f9f9;
+        padding: 12px 16px;
+        margin: 10px 0;
+        border-radius: 8px;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+  </style>
+</head>
 <body>
-    <div class="full-body-container">
-        <div class="top-text">
-            <div class="roast-it-title" id="roast-logo">
-                <h1 id="roast-r">R</h1>
-                <h1 id="roast-o">O</h1>
-                <h1 id="roast-a">A</h1>
-                <h1 id="roast-s">S</h1>
-                <h1 id="roast-t">T</h1>
-                <h1 id="roast-it">-IT</h1>
-                <!-- Explosion Effect -->
-                <span class="explosion"></span>
-                <span class="explosion"></span>
-                <span class="explosion"></span>
-                <span class="explosion"></span>
-            </div>
-            <div class="search-container">
-                <div class="input-box" onclick="sendFocus()">
-                    <img src="{{ url_for('static', filename='images/mic.png') }}" />
-                    <input placeholder="Go ahead, embarrass yourself..." id="filter-text-val">
-                </div>
-                <button id="search-button" onclick="filterText()">Search</button>
-            </div>
+  <div class="full-body-container">
+    <div class="top-text">
+      <div class="roast-it-title" id="roast-logo">
+        <h1 id="roast-r">R</h1>
+        <h1 id="roast-o">O</h1>
+        <h1 id="roast-a">A</h1>
+        <h1 id="roast-s">S</h1>
+        <h1 id="roast-t">T</h1>
+        <h1 id="roast-it">-IT</h1>
+        <span class="explosion"></span>
+        <span class="explosion"></span>
+        <span class="explosion"></span>
+        <span class="explosion"></span>
+      </div>
+
+      <div class="search-container">
+        <div class="input-box" onclick="sendFocus()">
+          <img src="{{ url_for('static', filename='images/mic.png') }}" />
+          <input placeholder="Go ahead, embarrass yourself..." id="filter-text-val">
         </div>
-        <div id="answer-box"></div>
+
+        <select id="category-filter">
+          <option value="">Any Category</option>
+          <option value="pun">Puns</option>
+          <option value="one-liner">One-Liners</option>
+          <option value="blonde">Blonde</option>
+          <option value="general">General</option>
+        </select>
+
+        <select id="sentiment-filter">
+          <option value="">Any Sentiment</option>
+          <option value="clean">Clean</option>
+          <option value="dark">Dark</option>
+          <option value="sarcastic">Sarcastic</option>
+          <option value="clever">Clever</option>
+        </select>
+
+        <button id="search-button" onclick="filterText()">Search</button>
+      </div>
     </div>
 
-    <script>
+    <div id="answer-box"></div>
+  </div>
 
-        function sendFocus() {
-            document.getElementById('filter-text-val').focus();
+  <script>
+    function sendFocus() {
+        document.getElementById('filter-text-val').focus();
+    }
+
+    function answerBoxTemplate(jokes) {
+        return `<div class='response-container'>
+            <ul class='jokes'>
+                ${jokes.length > 0
+                    ? jokes.map(joke => `<li>😂 ${joke}</li>`).join('')
+                    : "<li>No jokes found. Try a different search.</li>"}
+            </ul>
+        </div>`;
+    }
+
+    function filterText() {
+        document.getElementById("answer-box").innerHTML = "";
+        let query = document.getElementById("filter-text-val").value;
+        let category = document.getElementById("category-filter").value;
+        let sentiment = document.getElementById("sentiment-filter").value;
+
+        if (query.trim() !== "") {
+            document.getElementById("answer-box").innerHTML = "<div class='loading'>Searching for jokes...</div>";
+
+            fetch("/roast-it?" + new URLSearchParams({
+                query: query,
+                category: category,
+                sentiment: sentiment
+            }).toString())
+                .then((response) => response.json())
+                .then((data) => {
+                    document.getElementById("answer-box").innerHTML = "";
+                    let tempDiv = document.createElement("div");
+                    tempDiv.innerHTML = answerBoxTemplate(data.jokes);
+                    document.getElementById("answer-box").appendChild(tempDiv);
+                })
+                .catch(error => {
+                    console.error("Error fetching jokes:", error);
+                    document.getElementById("answer-box").innerHTML =
+                        "<div class='error'>Something went wrong. Please try again later.</div>";
+                });
         }
+    }
 
-        function answerBoxTemplate(jokes) {
-            return `<div class='response-container'>
-        <ul class='jokes'>
-            ${jokes.length > 0 ? jokes.map(joke => `<li>😂 ${joke}</li>`).join('') : "<li>No jokes found. Try a different search.</li>"}
-        </ul>
-    </div>`;
-        }
-
-        function filterText() {
-            document.getElementById("answer-box").innerHTML = "";
-            let query = document.getElementById("filter-text-val").value;
-
-            if (query.trim() !== "") {
-                document.getElementById("answer-box").innerHTML = "<div class='loading'>Searching for jokes...</div>";
-
-                fetch("/roast-it?" + new URLSearchParams({ query: query }).toString())
-                    .then((response) => response.json())
-                    .then((data) => {
-                        document.getElementById("answer-box").innerHTML = "";
-                        let tempDiv = document.createElement("div");
-                        tempDiv.innerHTML = answerBoxTemplate(data.jokes);
-                        document.getElementById("answer-box").appendChild(tempDiv);
-                    })
-                    .catch(error => {
-                        console.error("Error fetching jokes:", error);
-                        document.getElementById("answer-box").innerHTML =
-                            "<div class='error'>Something went wrong. Please try again later.</div>";
-                    });
-            }
-        }
-        window.onload = function () {
-            document.getElementById('filter-text-val').focus();
-        };
-    </script>
-
-    <style>
-        .search-container {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .input-box {
-            flex-grow: 1;
-            margin-right: 10px;
-        }
-
-        #search-button {
-            background-color: #ff6b6b;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-family: 'Open Sans', sans-serif;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        #search-button:hover {
-            background-color: #ff5252;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-            font-family: 'Open Sans', sans-serif;
-            color: #666;
-        }
-
-        .error {
-            text-align: center;
-            padding: 20px;
-            font-family: 'Open Sans', sans-serif;
-            color: #ff5252;
-        }
-    </style>
+    window.onload = function () {
+        document.getElementById('filter-text-val').focus();
+    };
+  </script>
 </body>
+</html>
