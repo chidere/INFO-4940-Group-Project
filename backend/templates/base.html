@@ -6,96 +6,126 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Open+Sans:wght@500&display=swap" rel="stylesheet">
+
   <style>
+    body {
+      background-color: #111;
+      color: white;
+      font-family: 'Open Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+
+    .roast-it-title {
+      font-family: 'Bungee', sans-serif;
+      font-size: 72px;
+      color: #ffcc00;
+      text-shadow: 3px 3px 0 #ff0066, 6px 6px 0 #000;
+      letter-spacing: 5px;
+      margin: 40px 0 20px 0;
+    }
+
     .search-container {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        justify-content: center;
-        width: 100%;
-        max-width: 700px;
-        margin: 0 auto;
-        gap: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      max-width: 750px;
+      margin: 0 auto;
     }
 
     .input-box {
-        flex-grow: 1;
-        display: flex;
-        align-items: center;
-        background-color: white;
-        padding: 0 10px;
-        border-radius: 5px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      background-color: #222;
+      border: 2px solid #ffcc00;
+      border-radius: 12px;
+      padding: 0 12px;
+      box-shadow: 0 0 12px #ffcc00;
+      min-width: 400px;
+      height: 48px;
+      animation: glow 2s infinite;
     }
 
-    .input-box img {
-        height: 20px;
-        margin-right: 10px;
+    @keyframes glow {
+      0% { box-shadow: 0 0 10px #ffcc00; }
+      50% { box-shadow: 0 0 20px #ff0066; }
+      100% { box-shadow: 0 0 10px #ffcc00; }
     }
 
     .input-box input {
-        border: none;
-        flex-grow: 1;
-        padding: 10px;
-        font-family: 'Open Sans', sans-serif;
-        font-size: 16px;
-        outline: none;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      padding-left: 10px;
+      outline: none;
+      flex-grow: 1;
     }
 
     select {
-        padding: 8px;
-        font-family: 'Open Sans', sans-serif;
-        border-radius: 5px;
-        border: 1px solid #ccc;
+      background-color: #222;
+      color: white;
+      border: 2px solid #ff0066;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-family: 'Open Sans', sans-serif;
     }
 
     #search-button {
-        background-color: #ff6b6b;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
-        font-family: 'Open Sans', sans-serif;
-        font-weight: bold;
-        cursor: pointer;
-        transition: background-color 0.3s;
+      background-color: #ff0066;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
     }
 
     #search-button:hover {
-        background-color: #ff5252;
+      background-color: #ff0033;
+      transform: scale(1.05);
     }
 
-    .loading {
-        text-align: center;
-        padding: 20px;
-        font-family: 'Open Sans', sans-serif;
-        color: #666;
+    .loading,
+    .error {
+      font-size: 18px;
+      padding: 20px;
+      color: #aaa;
     }
 
     .error {
-        text-align: center;
-        padding: 20px;
-        font-family: 'Open Sans', sans-serif;
-        color: #ff5252;
+      color: #ff0033;
     }
 
     .response-container {
-        margin: 20px auto;
-        max-width: 700px;
-        font-family: 'Open Sans', sans-serif;
+      margin: 30px auto;
+      max-width: 700px;
+      text-align: left;
     }
 
     .response-container ul {
-        list-style: none;
-        padding: 0;
+      list-style: none;
+      padding: 0;
     }
 
     .response-container li {
-        background: #f9f9f9;
-        padding: 12px 16px;
-        margin: 10px 0;
-        border-radius: 8px;
-        font-size: 16px;
-        line-height: 1.5;
+      background: #1a1a1a;
+      padding: 14px 20px;
+      margin-bottom: 12px;
+      border-left: 5px solid #ffcc00;
+      border-radius: 8px;
+      font-size: 16px;
+      line-height: 1.5;
+      color: #eee;
     }
   </style>
 </head>
@@ -117,7 +147,7 @@
 
       <div class="search-container">
         <div class="input-box" onclick="sendFocus()">
-          <img src="{{ url_for('static', filename='images/mic.png') }}" />
+          <!-- Broken mic icon removed -->
           <input placeholder="Go ahead, embarrass yourself..." id="filter-text-val">
         </div>
 
@@ -146,50 +176,50 @@
 
   <script>
     function sendFocus() {
-        document.getElementById('filter-text-val').focus();
+      document.getElementById('filter-text-val').focus();
     }
 
     function answerBoxTemplate(jokes) {
-        return `<div class='response-container'>
-            <ul class='jokes'>
-                ${jokes.length > 0
-                    ? jokes.map(joke => `<li>😂 ${joke}</li>`).join('')
-                    : "<li>No jokes found. Try a different search.</li>"}
-            </ul>
-        </div>`;
+      return `<div class='response-container'>
+        <ul class='jokes'>
+          ${jokes.length > 0
+            ? jokes.map(joke => `<li>😂 ${joke}</li>`).join('')
+            : "<li>No jokes found. Try a different search.</li>"}
+        </ul>
+      </div>`;
     }
 
     function filterText() {
-        document.getElementById("answer-box").innerHTML = "";
-        let query = document.getElementById("filter-text-val").value;
-        let category = document.getElementById("category-filter").value;
-        let sentiment = document.getElementById("sentiment-filter").value;
+      document.getElementById("answer-box").innerHTML = "";
+      let query = document.getElementById("filter-text-val").value;
+      let category = document.getElementById("category-filter").value;
+      let sentiment = document.getElementById("sentiment-filter").value;
 
-        if (query.trim() !== "") {
-            document.getElementById("answer-box").innerHTML = "<div class='loading'>Searching for jokes...</div>";
+      if (query.trim() !== "") {
+        document.getElementById("answer-box").innerHTML = "<div class='loading'>Searching for jokes...</div>";
 
-            fetch("/roast-it?" + new URLSearchParams({
-                query: query,
-                category: category,
-                sentiment: sentiment
-            }).toString())
-                .then((response) => response.json())
-                .then((data) => {
-                    document.getElementById("answer-box").innerHTML = "";
-                    let tempDiv = document.createElement("div");
-                    tempDiv.innerHTML = answerBoxTemplate(data.jokes);
-                    document.getElementById("answer-box").appendChild(tempDiv);
-                })
-                .catch(error => {
-                    console.error("Error fetching jokes:", error);
-                    document.getElementById("answer-box").innerHTML =
-                        "<div class='error'>Something went wrong. Please try again later.</div>";
-                });
-        }
+        fetch("/roast-it?" + new URLSearchParams({
+          query: query,
+          category: category,
+          sentiment: sentiment
+        }).toString())
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("answer-box").innerHTML = "";
+            let tempDiv = document.createElement("div");
+            tempDiv.innerHTML = answerBoxTemplate(data.jokes);
+            document.getElementById("answer-box").appendChild(tempDiv);
+          })
+          .catch(error => {
+            console.error("Error fetching jokes:", error);
+            document.getElementById("answer-box").innerHTML =
+              "<div class='error'>Something went wrong. Please try again later.</div>";
+          });
+      }
     }
 
     window.onload = function () {
-        document.getElementById('filter-text-val').focus();
+      document.getElementById('filter-text-val').focus();
     };
   </script>
 </body>
