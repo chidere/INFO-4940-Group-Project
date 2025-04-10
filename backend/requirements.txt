@@ -26,3 +26,4 @@ tzdata==2024.1
 Werkzeug==2.2.2
 nltk==3.9.1
 sklearn==0.0
+sentence-transformers==2.2.2
