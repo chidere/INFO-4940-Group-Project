@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from python.svd_reducer import SVDReducer  # Import your modular SVD class
+from text_utils import preprocess
+
 
 class JokeRanker:
     def __init__(self, joke_data, n_components=100):

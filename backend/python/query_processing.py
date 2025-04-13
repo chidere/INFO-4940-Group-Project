@@ -5,6 +5,8 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
+from text_utils import preprocess
+
 
 class QueryProcessor:
   """
