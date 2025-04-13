@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <title>{% block title %}{% endblock %} - Roast-It: The Search Engine That Hates You</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -52,9 +53,17 @@
     }
 
     @keyframes glow {
-      0% { box-shadow: 0 0 10px #ffcc00; }
-      50% { box-shadow: 0 0 20px #ff0066; }
-      100% { box-shadow: 0 0 10px #ffcc00; }
+      0% {
+        box-shadow: 0 0 10px #ffcc00;
+      }
+
+      50% {
+        box-shadow: 0 0 20px #ff0066;
+      }
+
+      100% {
+        box-shadow: 0 0 10px #ffcc00;
+      }
     }
 
     .input-box input {
@@ -119,16 +128,52 @@
 
     .response-container li {
       background: #1a1a1a;
-      padding: 14px 20px;
       margin-bottom: 12px;
       border-left: 5px solid #ffcc00;
       border-radius: 8px;
       font-size: 16px;
       line-height: 1.5;
       color: #eee;
+      overflow: hidden;
+      /* Ensure content stays within boundaries */
+    }
+
+    .joke-item {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      position: relative;
+      min-height: 60px;
+      padding: 14px;
+    }
+
+    .joke-content {
+      flex: 1;
+      padding-right: 80px;
+      /* Ensure there's always space for the score badge */
+    }
+
+    .score-container {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 70px;
+      text-align: center;
+    }
+
+    .score-badge {
+      display: inline-block;
+      background-color: #ff0066;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: bold;
+      white-space: nowrap;
     }
   </style>
 </head>
+
 <body>
   <div class="full-body-container">
     <div class="top-text">
@@ -147,7 +192,6 @@
 
       <div class="search-container">
         <div class="input-box" onclick="sendFocus()">
-          <!-- Broken mic icon removed -->
           <input placeholder="Go ahead, embarrass yourself..." id="filter-text-val">
         </div>
 
@@ -157,14 +201,6 @@
           <option value="one-liner">One-Liners</option>
           <option value="blonde">Blonde</option>
           <option value="general">General</option>
-        </select>
-
-        <select id="sentiment-filter">
-          <option value="">Any Sentiment</option>
-          <option value="clean">Clean</option>
-          <option value="dark">Dark</option>
-          <option value="sarcastic">Sarcastic</option>
-          <option value="clever">Clever</option>
         </select>
 
         <button id="search-button" onclick="filterText()">Search</button>
@@ -179,12 +215,21 @@
       document.getElementById('filter-text-val').focus();
     }
 
-    function answerBoxTemplate(jokes) {
+    function answerBoxTemplate(jokesWithScores) {
       return `<div class='response-container'>
         <ul class='jokes'>
-          ${jokes.length > 0
-            ? jokes.map(joke => `<li>😂 ${joke}</li>`).join('')
-            : "<li>No jokes found. Try a different search.</li>"}
+          ${jokesWithScores.length > 0
+          ? jokesWithScores.map(item =>
+            `<li>
+              <div class="joke-item">
+                <div class="joke-content">😂 ${item.joke}</div>
+                <div class="score-container">
+                  <span class="score-badge">Score: ${item.score.toFixed(2)}</span>
+                </div>
+              </div>
+            </li>`
+          ).join('')
+          : "<li><div class='joke-item'>No jokes found. Try a different search.</div></li>"}
         </ul>
       </div>`;
     }
@@ -193,7 +238,6 @@
       document.getElementById("answer-box").innerHTML = "";
       let query = document.getElementById("filter-text-val").value;
       let category = document.getElementById("category-filter").value;
-      let sentiment = document.getElementById("sentiment-filter").value;
 
       if (query.trim() !== "") {
         document.getElementById("answer-box").innerHTML = "<div class='loading'>Searching for jokes...</div>";
@@ -201,13 +245,26 @@
         fetch("/roast-it?" + new URLSearchParams({
           query: query,
           category: category,
-          sentiment: sentiment
         }).toString())
           .then((response) => response.json())
           .then((data) => {
             document.getElementById("answer-box").innerHTML = "";
             let tempDiv = document.createElement("div");
-            tempDiv.innerHTML = answerBoxTemplate(data.jokes);
+
+            // Handle the jokes_with_scores array from backend
+            if (data.jokes_with_scores) {
+              tempDiv.innerHTML = answerBoxTemplate(data.jokes_with_scores);
+            } else if (data.jokes) {
+              // Fallback for backward compatibility
+              const jokesWithScores = data.jokes.map(joke => ({
+                joke: joke,
+                score: 1.0
+              }));
+              tempDiv.innerHTML = answerBoxTemplate(jokesWithScores);
+            } else {
+              tempDiv.innerHTML = "<div class='error'>No jokes found</div>";
+            }
+
             document.getElementById("answer-box").appendChild(tempDiv);
           })
           .catch(error => {
@@ -218,9 +275,19 @@
       }
     }
 
+    // Add Enter key support
+    document.addEventListener('DOMContentLoaded', function () {
+      document.getElementById('filter-text-val').addEventListener('keypress', function (event) {
+        if (event.key === 'Enter') {
+          filterText();
+        }
+      });
+    });
+
     window.onload = function () {
       document.getElementById('filter-text-val').focus();
     };
   </script>
 </body>
+
 </html>
