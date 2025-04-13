@@ -1,5 +1,6 @@
 from sklearn.decomposition import TruncatedSVD
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import normalize
 
 class SVDReducer:
     def __init__(self, n_components=100):
@@ -9,16 +10,17 @@ class SVDReducer:
         self.fitted = False
 
     def fit(self, tfidf_matrix):
-        """Fit the SVD model to the TF-IDF matrix."""
+        """Fit the SVD model and normalize the reduced matrix."""
         self.joke_reduced = self.svd.fit_transform(tfidf_matrix)
+        self.joke_reduced = normalize(self.joke_reduced, axis=1)
         self.fitted = True
         return self.joke_reduced
 
     def transform(self, tfidf_vector):
-        """Transform a new TF-IDF vector into the reduced SVD space."""
+        """Transform and normalize a new TF-IDF vector into the reduced space."""
         if not self.fitted:
             raise ValueError("SVDReducer must be fit before calling transform().")
-        return self.svd.transform(tfidf_vector)
+        return normalize(self.svd.transform(tfidf_vector), axis=1)
 
     def compute_similarity(self, query_reduced, corpus_reduced, top_n=5):
         """Compute cosine similarities between reduced query and reduced corpus."""

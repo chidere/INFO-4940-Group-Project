@@ -32,7 +32,7 @@ class QueryProcessor:
 
     def preprocess_query(self, query):
         """Normalize user query using shared function."""
-        return preprocess(query)  # ✅ Use consistent preprocessing
+        return preprocess(query)  
 
     def extract_keywords(self, query):
         words = query.split()
