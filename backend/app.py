@@ -41,27 +41,44 @@ joke_ranker = JokeRanker(joke_texts)
 
 def joke_search(query):
     try:
-        # Preprocess full query as-is
-        print(f"Original query: {query}")
-        search_query = query.strip()
-
-        # Run semantic ranking on the entire dataset
-        ranked_jokes = joke_ranker.rank_jokes(search_query, 10)
-        print(f"Found {len(ranked_jokes)} ranked jokes")
-
-        results = []
-        for joke_text, score in ranked_jokes:
-            if joke_text in joke_data_map:
-                joke_data = joke_data_map[joke_text]
-                results.append({
-                    'title': joke_data.get('title', ''),
-                    'body': joke_data.get('body', ''),
-                    'category': joke_data.get('category', ''),
-                    'score': float(score)
-                })
-
-        return results[:5] if results else []
-
+        # Process the query to extract information
+        query_info = query_processor.process_query(query)
+        print(f"Processed query: {query_info}")
+        
+        # Get category from query
+        category = query_info['category']
+        
+        # Try to find jokes in category
+        category_jokes = []
+        if category != 'general':
+            category_jokes = jokes_df[jokes_df['category'].str.contains(
+                category, case=False, na=False)].to_dict('records')
+        
+        # If not enough category jokes, use ranking
+        if len(category_jokes) < 5:
+            search_query = ' '.join(query_info['keywords'])
+            print(f"Searching with keywords: {search_query}")
+            
+            # Get ranked jokes
+            ranked_jokes = joke_ranker.rank_jokes(search_query, 5)
+            print(f"Found {len(ranked_jokes)} ranked jokes")
+            
+            results = []
+            for joke_text, score in ranked_jokes:
+                if joke_text in joke_data_map:
+                    joke_data = joke_data_map[joke_text]
+                    results.append({
+                        'title': joke_data.get('title', ''),
+                        'body': joke_data.get('body', ''),
+                        'category': joke_data.get('category', ''),
+                        'score': float(score)
+                    })
+            return results
+        else:
+            # Return category jokes
+            for joke in category_jokes:
+                joke['score'] = 1.0
+            return category_jokes[:5]
     except Exception as e:
         print(f"Error in joke_search: {str(e)}")
         return []
