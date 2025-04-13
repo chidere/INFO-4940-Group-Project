@@ -39,46 +39,43 @@ for idx, row in jokes_df.iterrows():
 
 joke_ranker = JokeRanker(joke_texts)
 
-def joke_search(query):
+def joke_search(query, category=""):
     try:
         # Process the query to extract information
         query_info = query_processor.process_query(query)
         print(f"Processed query: {query_info}")
         
-        # Get category from query
-        category = query_info['category']
-        
-        # Try to find jokes in category
-        category_jokes = []
-        if category != 'general':
-            category_jokes = jokes_df[jokes_df['category'].str.contains(
-                category, case=False, na=False)].to_dict('records')
-        
-        # If not enough category jokes, use ranking
-        if len(category_jokes) < 5:
-            search_query = ' '.join(query_info['keywords'])
-            print(f"Searching with keywords: {search_query}")
+        # Override category if provided as a parameter
+        if category:
+            query_info['category'] = category
             
-            # Get ranked jokes
-            ranked_jokes = joke_ranker.rank_jokes(search_query, 5)
-            print(f"Found {len(ranked_jokes)} ranked jokes")
-            
-            results = []
-            for joke_text, score in ranked_jokes:
-                if joke_text in joke_data_map:
-                    joke_data = joke_data_map[joke_text]
-                    results.append({
-                        'title': joke_data.get('title', ''),
-                        'body': joke_data.get('body', ''),
-                        'category': joke_data.get('category', ''),
-                        'score': float(score)
-                    })
-            return results
-        else:
-            # Return category jokes
-            for joke in category_jokes:
-                joke['score'] = 1.0
-            return category_jokes[:5]
+        # Get keywords for search
+        search_query = ' '.join(query_info['keywords'])
+        print(f"Searching with keywords: {search_query}")
+        
+        # Get ranked jokes using cosine similarity
+        ranked_jokes = joke_ranker.rank_jokes(search_query, 5)
+        print(f"Found {len(ranked_jokes)} ranked jokes")
+        
+        # If a category filter is active, filter the ranked jokes by category
+        filtered_results = []
+        for joke_text, score in ranked_jokes:
+            if joke_text in joke_data_map:
+                joke_data = joke_data_map[joke_text]
+                
+                # Apply category filter if specified
+                if category and category != 'general' and category != '':
+                    if category.lower() not in joke_data.get('category', '').lower():
+                        continue  # Skip jokes that don't match the category
+                
+                filtered_results.append({
+                    'title': joke_data.get('title', ''),
+                    'body': joke_data.get('body', ''),
+                    'category': joke_data.get('category', ''),
+                    'score': float(score)
+                })
+        
+        return filtered_results
     except Exception as e:
         print(f"Error in joke_search: {str(e)}")
         return []
@@ -90,27 +87,36 @@ def home():
 @app.route("/roast-it")
 def search_jokes():
     query = request.args.get("query", "")
+    category = request.args.get("category", "")
+    
     if not query:
         return jsonify({"error": "No query provided"}), 400
     
     try:
-        jokes = joke_search(query)
+        jokes = joke_search(query, category)
         
-        # Format joke texts for response
-        joke_texts = []
+        # Format joke texts and scores for response
+        jokes_with_scores = []
         for joke in jokes:
+            joke_text = ""
             if joke.get('title') and joke.get('body'):
-                joke_texts.append(f"{joke['title']}: {joke['body']}")
+                joke_text = f"{joke['title']}: {joke['body']}"
             elif joke.get('body'):
-                joke_texts.append(joke['body'])
+                joke_text = joke['body']
+                
+            jokes_with_scores.append({
+                "joke": joke_text,
+                "score": joke.get('score', 1.0)
+            })
+            
         return jsonify({
-            "jokes": joke_texts
+            "jokes_with_scores": jokes_with_scores
         })
     except Exception as e:
         print(f"Error in search_jokes: {str(e)}")
         return jsonify({
             "error": str(e),
-            "jokes": []
+            "jokes_with_scores": []
         }), 500
 
 @app.route("/categories")
