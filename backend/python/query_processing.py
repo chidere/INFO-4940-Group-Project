@@ -5,14 +5,9 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
-from python.text_utils import preprocess  
+from text_utils import preprocess
 
 class QueryProcessor:
-    """
-    Handles processing of user queries for the joke recommender system.
-    Extracts keywords, identifies humor categories, has "Did you mean?" feature, and prepares queries
-    for joke retrieval.
-    """
     def __init__(self):
         self.humor_categories = {
             'pun': ['pun', 'wordplay', 'play on words'],
@@ -20,10 +15,12 @@ class QueryProcessor:
             'blonde': ['blonde', 'dumb', 'silly'],
             'general': ['general', 'normal', 'regular']
         }
+
         self.joke_subjects = [
             'food', 'work', 'school', 'politics', 'animals', 'sports',
             'relationships', 'technology', 'health', 'money', 'travel'
         ]
+
         self.tfidf_vectorizer = TfidfVectorizer(
             stop_words='english',
             max_features=1000,
@@ -31,8 +28,7 @@ class QueryProcessor:
         )
 
     def preprocess_query(self, query):
-        """Normalize user query using shared function."""
-        return preprocess(query)  
+        return preprocess(query)
 
     def extract_keywords(self, query):
         words = query.split()
@@ -80,13 +76,15 @@ class QueryProcessor:
         keywords = self.extract_keywords(processed_query)
         category = self.identify_humor_category(query)
         sentiment = self.detect_sentiment(query)
+
         all_category_keywords = [kw for sublist in self.humor_categories.values() for kw in sublist]
         filtered_keywords = [kw for kw in keywords if kw not in all_category_keywords]
-        query_info = {
+
+        return {
             'original_query': query,
             'processed_query': processed_query,
+            'full_phrase': processed_query,
             'keywords': filtered_keywords if filtered_keywords else keywords,
             'category': category,
             'sentiment': sentiment
         }
-        return query_info
