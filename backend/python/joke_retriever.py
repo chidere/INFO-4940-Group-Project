@@ -6,7 +6,7 @@ def is_inappropriate(text):
     result = predict([text])
     return result[0] == 1 
 
-#def retrieve_jokes(category, dataset):
+def retrieve_jokes(category, dataset):
     """Retrieves jokes based on the category while filtering out inappropriate content."""
     relevant_jokes = [
         joke for joke in dataset 
@@ -14,7 +14,7 @@ def is_inappropriate(text):
     ]
     return relevant_jokes
 
-def retrieve_jokes(category, dataset, inappropriate_words):
+#def retrieve_jokes(category, dataset, inappropriate_words):
     """Retrieves jokes based on the category while filtering out inappropriate content."""
     relevant_jokes = [
         joke for joke in dataset 
@@ -41,9 +41,9 @@ def main():
     processed_query = query_processor.process_query(user_query)
     category = processed_query['category']
     
-    jokes = retrieve_jokes(category, dataset, inappropriate_words)
+    #jokes = retrieve_jokes(category, dataset, inappropriate_words)
 
-    #jokes = retrieve_jokes(category, dataset)
+    jokes = retrieve_jokes(category, dataset)
 
     if jokes:
         print("Jokes found:")
