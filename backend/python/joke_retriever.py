@@ -1,18 +1,21 @@
 from python.query_processing import QueryProcessor
 from profanity_check import predict
 
-def is_inappropriate(text):
-    """Checks if the joke has profanity in it using the python profanity library (returns 1 for inappropriate, 0 for appropriate)"""
-    result = predict([text])
-    return result[0] == 1 
-
 def retrieve_jokes(category, dataset):
     """Retrieves jokes based on the category while filtering out inappropriate content."""
-    relevant_jokes = [
+    
+    # Retrieves jokes based on the category
+    category_jokes = [
         joke for joke in dataset 
-        if category.lower() in joke['category'].lower() and not  is_inappropriate(joke['joke_text'])
+        if category.lower() in joke['category'].lower()
     ]
-    return relevant_jokes
+
+    # Parses category jokess to return only clean jokes
+    clean_jokes = [
+        joke for joke in category_jokes 
+        if predict([joke['joke_text']])[0] == 0
+    ]
+    return clean_jokes
 
 #def retrieve_jokes(category, dataset, inappropriate_words):
     """Retrieves jokes based on the category while filtering out inappropriate content."""
