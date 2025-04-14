@@ -1,9 +1,23 @@
 from python.query_processing import QueryProcessor
 from profanity_check import predict
 
+def retrieve_jokes(category, dataset):
+    """Retrieves jokes based on the category while filtering out inappropriate content."""
+    
+    # Retrieves jokes based on the category
+    category_jokes = [
+        joke for joke in dataset 
+        if category.lower() in joke['category'].lower()
+    ]
 
+    # Parses categorical jokes to return only clean jokes
+    clean_jokes = [
+        joke for joke in category_jokes 
+        if predict([joke['joke_text']])[0] == 0
+    ]
+    return clean_jokes
 
-def retrieve_jokes(category, dataset, inappropriate_words):
+#def retrieve_jokes(category, dataset, inappropriate_words):
     """Retrieves jokes based on the category while filtering out inappropriate content."""
     relevant_jokes = [
         joke for joke in dataset 
@@ -23,16 +37,16 @@ def main():
         {"id": 4, "joke_text": "This joke contains an inappropriate word.", "category": "General", "rating": 3}
     ]
     
-    inappropriate_words = {"fuck", "shit", "bitch", "cunt", "pussy", "shit"}  # Example filter words
+    #inappropriate_words = {"fuck", "shit", "bitch", "cunt", "pussy", "shit"}  # Example filter words
     
     # User input for query
     user_query = input("Enter your joke request: ")
     processed_query = query_processor.process_query(user_query)
     category = processed_query['category']
     
-    jokes = retrieve_jokes(category, dataset, inappropriate_words)
+    #jokes = retrieve_jokes(category, dataset, inappropriate_words)
 
-    #jokes = retrieve_jokes(category, dataset)
+    jokes = retrieve_jokes(category, dataset)
 
     if jokes:
         print("Jokes found:")
