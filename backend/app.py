@@ -152,7 +152,9 @@ def explain():
     try:
         data = request.get_json()
         query = data.get("query", "")
-        joke_index = int(data.get("joke_index", 0))
+        joke_text = data.get("joke_text", "")
+        true_index = joke_ranker.jokes.index(joke_text)
+
 
         # Re-process the query to match ranking logic
         query_info = query_processor.process_query(query)
