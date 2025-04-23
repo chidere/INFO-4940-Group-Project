@@ -4,6 +4,7 @@ from flask_cors import CORS
 import pandas as pd
 from python.query_processing import QueryProcessor
 from python.joke_ranker import JokeRanker
+import plotly.graph_objects as go
 
 # ROOT_PATH for linking with all your files. 
 # Feel free to use a config.py or settings.py with a global export variable
@@ -144,6 +145,25 @@ def debug_jokes():
         "categories": jokes_df['category'].dropna().unique().tolist(),
         "sample_jokes": jokes_df.head(3).to_dict('records') if len(jokes_df) > 0 else []
     })
+
+@app.route("/explanation", methods=["POST"])
+def explain():
+    data = request.get_json()
+    query = data.get("query", "")
+    joke_index = int(data.get("joke_index", 0))
+    
+    # Get component relevance values
+    relevance = joke_ranker.explain_match(query, joke_index)
+
+    # Generate radar chart
+    fig = go.Figure(data=go.Scatterpolar(
+        r=relevance,
+        theta=[f"Comp {i+1}" for i in range(len(relevance))],
+        fill='toself'
+    ))
+    fig.update_layout(polar=dict(radialaxis=dict(visible=True)), showlegend=False)
+
+    return jsonify(fig.to_dict())
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
