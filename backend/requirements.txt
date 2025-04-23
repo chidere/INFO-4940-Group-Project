@@ -27,3 +27,4 @@ Werkzeug==2.2.2
 nltk==3.9.1
 sklearn==0.0
 profanity-check==1.0.3
+plotly==5.20.0
