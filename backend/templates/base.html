@@ -57,7 +57,7 @@
               <div class="joke-content" style="flex: 1; padding-right: 80px;">😂 ${item.joke}</div>
               <div class="score-container" style="position: absolute; top: 14px; right: 14px; text-align: center;">
                 <span class="score-badge" style="background-color: #ff0066; color: white; padding: 4px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;">Score: ${item.score.toFixed(2)}</span><br/>
-                <button onclick="showExplanation(lastSearchQuery, ${index})" style="margin-top: 6px; font-size: 12px;">Explain</button>
+                <button onclick="showExplanation(lastSearchQuery, \`${item.joke}\`)">Explain</button>
               </div>
             </div>
           </li>`
