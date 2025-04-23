@@ -237,6 +237,7 @@
     function filterText() {
       document.getElementById("answer-box").innerHTML = "";
       let query = document.getElementById("filter-text-val").value;
+      lastSearchQuery = query;  // ✅ Store last query here
       let category = document.getElementById("category-filter").value;
 
       if (query.trim() !== "") {
@@ -293,13 +294,35 @@
 <div style="margin-top: 40px;">
   <h2>Why This Joke?</h2>
   <div id="radarChartDiv" style="width:600px;height:500px;margin:auto;"></div>
-  <button onclick="showExplanation('tech joke', 0)" style="margin-top: 10px;">Explain Joke Match</button>
 </div>
 
 <!-- Plotly CDN -->
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
 <script>
+let lastSearchQuery = "";
+
+function answerBoxTemplate(jokesWithScores) {
+  let content = `<div class='response-container'><ul class='jokes'>`;
+  if (jokesWithScores.length > 0) {
+    content += jokesWithScores.map((item, index) =>
+      `<li>
+        <div class="joke-item">
+          <div class="joke-content">😂 ${item.joke}</div>
+          <div class="score-container">
+            <span class="score-badge">Score: ${item.score.toFixed(2)}</span>
+            <button onclick="showExplanation(lastSearchQuery, ${index})" style="margin-top: 6px;">Explain</button>
+          </div>
+        </div>
+      </li>`
+    ).join('');
+  } else {
+    content += "<li><div class='joke-item'>No jokes found. Try a different search.</div></li>";
+  }
+  content += "</ul></div>";
+  return content;
+}
+
 async function showExplanation(query, jokeIndex) {
   try {
     document.getElementById("radarChartDiv").innerHTML = "<div class='loading'>Loading chart...</div>";
@@ -324,6 +347,7 @@ async function showExplanation(query, jokeIndex) {
   }
 }
 </script>
+
 
 </body>
 
