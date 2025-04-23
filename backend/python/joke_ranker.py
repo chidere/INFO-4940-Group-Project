@@ -38,3 +38,16 @@ class JokeRanker:
             query_reduced, self.joke_reduced, top_n
         )
         return [(self.jokes[i], similarities[i]) for i in ranked_indices]
+    
+    def explain_match(self, query, joke_index):
+    cleaned_query = preprocess(query)
+    query_vec = self.vectorizer.transform([cleaned_query])
+    query_reduced = self.reducer.transform(query_vec)[0]  # 1D vector
+    joke_reduced = self.joke_reduced[joke_index]  # also 1D vector
+    relevance = query_reduced * joke_reduced
+    total = np.sum(relevance)
+    if total == 0:
+        normalized = np.zeros_like(relevance)
+    else:
+        normalized = relevance / total
+    return normalized.tolist()
