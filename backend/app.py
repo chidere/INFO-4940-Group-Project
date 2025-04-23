@@ -154,10 +154,22 @@ def explain():
         query = data.get("query", "")
         joke_index = int(data.get("joke_index", 0))
 
+        # Re-process the query to match ranking logic
+        query_info = query_processor.process_query(query)
+        search_query = ' '.join(query_info['keywords'])
+
+        # Get ranked jokes again to find the real index
+        ranked = joke_ranker.rank_jokes(search_query, top_n=5)
+        if joke_index >= len(ranked):
+            return jsonify({"error": "Invalid joke index."}), 400
+
+        joke_text, _ = ranked[joke_index]
+        true_index = joke_ranker.jokes.index(joke_text)
+
         cleaned_query = preprocess(query)
         query_vec = joke_ranker.vectorizer.transform([cleaned_query])
         query_reduced = joke_ranker.reducer.transform(query_vec)[0]
-        joke_reduced = joke_ranker.joke_reduced[joke_index]
+        joke_reduced = joke_ranker.joke_reduced[true_index]
 
         relevance = query_reduced * joke_reduced
         total = np.sum(relevance)
@@ -194,7 +206,9 @@ def explain():
         return jsonify(fig.to_dict())
 
     except Exception as e:
+        print("Explanation error:", e)
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
