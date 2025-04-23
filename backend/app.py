@@ -152,19 +152,48 @@ def explain():
     data = request.get_json()
     query = data.get("query", "")
     joke_index = int(data.get("joke_index", 0))
-    
-    # Get component relevance values
-    relevance = joke_ranker.explain_match(query, joke_index)
 
-    # Generate radar chart
+    cleaned_query = preprocess(query)
+    query_vec = joke_ranker.vectorizer.transform([cleaned_query])
+    query_reduced = joke_ranker.reducer.transform(query_vec)[0]
+    joke_reduced = joke_ranker.joke_reduced[joke_index]
+
+    relevance = query_reduced * joke_reduced
+    total = np.sum(relevance)
+    normalized = relevance / total if total > 0 else np.zeros_like(relevance)
+
+    # Get top 10 components
+    top_indices = np.argsort(normalized)[-10:][::-1]
+    top_values = [normalized[i] for i in top_indices]
+
+    feature_names = joke_ranker.vectorizer.get_feature_names_out()
+    component_words = []
+    for i in top_indices:
+        top_word_indices = np.argsort(joke_ranker.reducer.components_[i])[-1:]
+        label = feature_names[top_word_indices[0]]
+        component_words.append(label)
+
+    # Plotly chart
     fig = go.Figure(data=go.Scatterpolar(
-        r=relevance,
-        theta=[f"Comp {i+1}" for i in range(len(relevance))],
+        r=top_values,
+        theta=component_words,
         fill='toself'
     ))
-    fig.update_layout(polar=dict(radialaxis=dict(visible=True)), showlegend=False)
+    fig.update_layout(
+        title="Top Contributing Features",
+        polar=dict(
+            bgcolor='rgba(0,0,0,0)',
+            radialaxis=dict(visible=True, range=[0, max(top_values)*1.2], tickfont=dict(color='white')),
+            angularaxis=dict(tickfont=dict(color='white'))
+        ),
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='white'),
+        margin=dict(l=30, r=30, t=30, b=30),
+        showlegend=False
+    )
 
     return jsonify(fig.to_dict())
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
