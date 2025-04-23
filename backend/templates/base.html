@@ -289,7 +289,7 @@
     };
   </script>
 
-  <!-- Radar Chart Section -->
+<!-- Radar Chart Section -->
 <div style="margin-top: 40px;">
   <h2>Why This Joke?</h2>
   <div id="radarChartDiv" style="width:600px;height:500px;margin:auto;"></div>
@@ -301,14 +301,27 @@
 
 <script>
 async function showExplanation(query, jokeIndex) {
+  try {
+    document.getElementById("radarChartDiv").innerHTML = "<div class='loading'>Loading chart...</div>";
+
     const response = await fetch("/explanation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: query, joke_index: jokeIndex })
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: query, joke_index: jokeIndex })
     });
 
     const chartData = await response.json();
+
+    if (!chartData.data || chartData.data.length === 0) {
+      document.getElementById("radarChartDiv").innerHTML = "<div class='error'>No relevance data available for this joke.</div>";
+      return;
+    }
+
     Plotly.newPlot("radarChartDiv", chartData.data, chartData.layout);
+  } catch (error) {
+    console.error("Radar chart failed:", error);
+    document.getElementById("radarChartDiv").innerHTML = "<div class='error'>Radar chart failed to load.</div>";
+  }
 }
 </script>
 
