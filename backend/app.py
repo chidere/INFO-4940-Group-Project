@@ -101,9 +101,10 @@ def search_jokes():
         for joke in jokes:
             joke_text = ""
             if joke.get('title') and joke.get('body'):
-                joke_text = f"{joke['title']}: {joke['body']}"
+                joke_text = f"{joke['title']}: {joke['body']}".encode('utf-8', errors='replace').decode('utf-8')
             elif joke.get('body'):
-                joke_text = joke['body']
+                joke_text = joke['body'].encode('utf-8', errors='replace').decode('utf-8')
+
                 
             jokes_with_scores.append({
                 "joke": joke_text,
