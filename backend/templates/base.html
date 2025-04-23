@@ -102,29 +102,29 @@
       }
     }
 
-    async function showExplanation(query, jokeIndex) {
+    async function showExplanation(query, jokeText) {
       try {
         document.getElementById("radarChartDiv").innerHTML = "<div class='loading'>Loading chart...</div>";
-
+    
         const response = await fetch("/explanation", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, joke_index: jokeIndex })
+          body: JSON.stringify({ query, joke_text: jokeText })
         });
-
+    
         const chartData = await response.json();
-
         if (!chartData.data || chartData.data.length === 0) {
           document.getElementById("radarChartDiv").innerHTML = "<div class='error'>No relevance data available for this joke.</div>";
           return;
         }
-
+    
         Plotly.newPlot("radarChartDiv", chartData.data, chartData.layout);
       } catch (error) {
         console.error("Radar chart failed:", error);
         document.getElementById("radarChartDiv").innerHTML = "<div class='error'>Radar chart failed to load.</div>";
       }
     }
+
 
     document.addEventListener('DOMContentLoaded', function () {
       document.getElementById('filter-text-val').addEventListener('keypress', function (event) {
