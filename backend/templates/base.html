@@ -1,282 +1,113 @@
 <!doctype html>
 <html lang="en">
-
 <head>
   <title>{% block title %}{% endblock %} - Roast-It: The Search Engine That Hates You</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Open+Sans:wght@500&display=swap" rel="stylesheet">
-
-  <style>
-    body {
-      background-color: #111;
-      color: white;
-      font-family: 'Open Sans', sans-serif;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-    }
-
-    .roast-it-title {
-      font-family: 'Bungee', sans-serif;
-      font-size: 72px;
-      color: #ffcc00;
-      text-shadow: 3px 3px 0 #ff0066, 6px 6px 0 #000;
-      letter-spacing: 5px;
-      margin: 40px 0 20px 0;
-    }
-
-    .search-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-      padding: 10px;
-      max-width: 750px;
-      margin: 0 auto;
-    }
-
-    .input-box {
-      position: relative;
-      display: flex;
-      align-items: center;
-      background-color: #222;
-      border: 2px solid #ffcc00;
-      border-radius: 12px;
-      padding: 0 12px;
-      box-shadow: 0 0 12px #ffcc00;
-      min-width: 400px;
-      height: 48px;
-      animation: glow 2s infinite;
-    }
-
-    @keyframes glow {
-      0% {
-        box-shadow: 0 0 10px #ffcc00;
-      }
-
-      50% {
-        box-shadow: 0 0 20px #ff0066;
-      }
-
-      100% {
-        box-shadow: 0 0 10px #ffcc00;
-      }
-    }
-
-    .input-box input {
-      background: transparent;
-      border: none;
-      color: #fff;
-      font-size: 16px;
-      padding-left: 10px;
-      outline: none;
-      flex-grow: 1;
-    }
-
-    select {
-      background-color: #222;
-      color: white;
-      border: 2px solid #ff0066;
-      border-radius: 10px;
-      padding: 8px 12px;
-      font-size: 14px;
-      font-family: 'Open Sans', sans-serif;
-    }
-
-    #search-button {
-      background-color: #ff0066;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 10px;
-      font-family: 'Open Sans', sans-serif;
-      font-weight: bold;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background-color 0.3s, transform 0.2s;
-    }
-
-    #search-button:hover {
-      background-color: #ff0033;
-      transform: scale(1.05);
-    }
-
-    .loading,
-    .error {
-      font-size: 18px;
-      padding: 20px;
-      color: #aaa;
-    }
-
-    .error {
-      color: #ff0033;
-    }
-
-    .response-container {
-      margin: 30px auto;
-      max-width: 700px;
-      text-align: left;
-    }
-
-    .response-container ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    .response-container li {
-      background: #1a1a1a;
-      margin-bottom: 12px;
-      border-left: 5px solid #ffcc00;
-      border-radius: 8px;
-      font-size: 16px;
-      line-height: 1.5;
-      color: #eee;
-      overflow: hidden;
-      /* Ensure content stays within boundaries */
-    }
-
-    .joke-item {
-      display: flex;
-      flex-direction: row;
-      align-items: flex-start;
-      position: relative;
-      min-height: 60px;
-      padding: 14px;
-    }
-
-    .joke-content {
-      flex: 1;
-      padding-right: 80px;
-      /* Ensure there's always space for the score badge */
-    }
-
-    .score-container {
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      width: 70px;
-      text-align: center;
-    }
-
-    .score-badge {
-      display: inline-block;
-      background-color: #ff0066;
-      color: white;
-      padding: 4px 8px;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: bold;
-      white-space: nowrap;
-    }
-  </style>
 </head>
-
-<body>
+<body style="background-color:#111; color:white; font-family:'Open Sans',sans-serif; text-align:center; margin:0; padding:0;">
   <div class="full-body-container">
     <div class="top-text">
-      <div class="roast-it-title" id="roast-logo">
-        <h1 id="roast-r">R</h1>
-        <h1 id="roast-o">O</h1>
-        <h1 id="roast-a">A</h1>
-        <h1 id="roast-s">S</h1>
-        <h1 id="roast-t">T</h1>
-        <h1 id="roast-it">-IT</h1>
-        <span class="explosion"></span>
-        <span class="explosion"></span>
-        <span class="explosion"></span>
-        <span class="explosion"></span>
+      <div class="roast-it-title" id="roast-logo" style="font-family:'Bungee',sans-serif; font-size:72px; color:#ffcc00; text-shadow:3px 3px 0 #ff0066, 6px 6px 0 #000; letter-spacing:5px; margin:40px 0 20px 0;">
+        R O A S T-IT
       </div>
 
-      <div class="search-container">
-        <div class="input-box" onclick="sendFocus()">
-          <input placeholder="Go ahead, embarrass yourself..." id="filter-text-val">
+      <div class="search-container" style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:10px; padding:10px; max-width:750px; margin:auto;">
+        <div class="input-box" style="background-color:#222; border:2px solid #ffcc00; border-radius:12px; padding:0 12px; box-shadow:0 0 12px #ffcc00; min-width:400px; height:48px;" onclick="sendFocus()">
+          <input placeholder="Go ahead, embarrass yourself..." id="filter-text-val" style="background:transparent; border:none; color:#fff; font-size:16px; padding-left:10px; outline:none; flex-grow:1;">
         </div>
-
-        <select id="category-filter">
+        <select id="category-filter" style="background-color:#222; color:white; border:2px solid #ff0066; border-radius:10px; padding:8px 12px;">
           <option value="">Any Category</option>
           <option value="pun">Puns</option>
           <option value="one-liner">One-Liners</option>
           <option value="blonde">Blonde</option>
           <option value="general">General</option>
         </select>
-
-        <button id="search-button" onclick="filterText()">Search</button>
+        <button id="search-button" onclick="filterText()" style="background-color:#ff0066; color:white; border:none; padding:10px 20px; border-radius:10px; font-weight:bold; font-size:14px; cursor:pointer;">Search</button>
       </div>
     </div>
 
     <div id="answer-box"></div>
+    <div id="radarChartDiv" style="margin-top: 40px; width:600px;height:500px;margin:auto;"></div>
   </div>
 
+  <!-- Plotly CDN -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
   <script>
+    let lastSearchQuery = "";
+
     function sendFocus() {
       document.getElementById('filter-text-val').focus();
     }
 
     function answerBoxTemplate(jokesWithScores) {
-      return `<div class='response-container'>
-        <ul class='jokes'>
-          ${jokesWithScores.length > 0
-          ? jokesWithScores.map(item =>
-            `<li>
-              <div class="joke-item">
-                <div class="joke-content">😂 ${item.joke}</div>
-                <div class="score-container">
-                  <span class="score-badge">Score: ${item.score.toFixed(2)}</span>
-                </div>
-              </div>
-            </li>`
-          ).join('')
-          : "<li><div class='joke-item'>No jokes found. Try a different search.</div></li>"}
-        </ul>
-      </div>`;
+      let content = `<div class='response-container'><ul class='jokes' style="list-style:none; padding:0;">`;
+      if (jokesWithScores.length > 0) {
+        content += jokesWithScores.map((item, index) =>
+          `<li style="background:#1a1a1a; margin-bottom:12px; border-left:5px solid #ffcc00; border-radius:8px; padding:14px; position:relative;">
+            <div class="joke-content" style="padding-right:80px;">😂 ${item.joke}</div>
+            <div class="score-container" style="position:absolute; top:14px; right:14px; width:90px; text-align:center;">
+              <span class="score-badge" style="display:inline-block; background-color:#ff0066; color:white; padding:4px 8px; border-radius:10px; font-size:12px; font-weight:bold;">Score: ${item.score.toFixed(2)}</span>
+              <button onclick="showExplanation(lastSearchQuery, ${index})" style="margin-top:6px; background:#333; color:white; border:none; border-radius:6px; padding:3px 6px; font-size:11px; cursor:pointer;">Explain</button>
+            </div>
+          </li>`
+        ).join('');
+      } else {
+        content += "<li><div class='joke-item'>No jokes found. Try a different search.</div></li>";
+      }
+      content += "</ul></div>";
+      return content;
     }
 
     function filterText() {
       document.getElementById("answer-box").innerHTML = "";
       let query = document.getElementById("filter-text-val").value;
-      lastSearchQuery = query;  // ✅ Store last query here
       let category = document.getElementById("category-filter").value;
+      lastSearchQuery = query;
 
       if (query.trim() !== "") {
         document.getElementById("answer-box").innerHTML = "<div class='loading'>Searching for jokes...</div>";
-
-        fetch("/roast-it?" + new URLSearchParams({
-          query: query,
-          category: category,
-        }).toString())
+        fetch("/roast-it?" + new URLSearchParams({ query, category }).toString())
           .then((response) => response.json())
           .then((data) => {
             document.getElementById("answer-box").innerHTML = "";
-            let tempDiv = document.createElement("div");
-
-            // Handle the jokes_with_scores array from backend
-            if (data.jokes_with_scores) {
-              tempDiv.innerHTML = answerBoxTemplate(data.jokes_with_scores);
-            } else if (data.jokes) {
-              // Fallback for backward compatibility
-              const jokesWithScores = data.jokes.map(joke => ({
-                joke: joke,
-                score: 1.0
-              }));
-              tempDiv.innerHTML = answerBoxTemplate(jokesWithScores);
-            } else {
-              tempDiv.innerHTML = "<div class='error'>No jokes found</div>";
-            }
-
-            document.getElementById("answer-box").appendChild(tempDiv);
+            const jokes = data.jokes_with_scores || [];
+            document.getElementById("answer-box").innerHTML = answerBoxTemplate(jokes);
           })
           .catch(error => {
             console.error("Error fetching jokes:", error);
-            document.getElementById("answer-box").innerHTML =
-              "<div class='error'>Something went wrong. Please try again later.</div>";
+            document.getElementById("answer-box").innerHTML = "<div class='error'>Something went wrong. Please try again later.</div>";
           });
       }
     }
 
-    // Add Enter key support
+    async function showExplanation(query, jokeIndex) {
+      try {
+        document.getElementById("radarChartDiv").innerHTML = "<div class='loading'>Loading chart...</div>";
+
+        const response = await fetch("/explanation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query, joke_index: jokeIndex })
+        });
+
+        const chartData = await response.json();
+
+        if (!chartData.data || chartData.data.length === 0) {
+          document.getElementById("radarChartDiv").innerHTML = "<div class='error'>No relevance data available for this joke.</div>";
+          return;
+        }
+
+        Plotly.newPlot("radarChartDiv", chartData.data, chartData.layout);
+      } catch (error) {
+        console.error("Radar chart failed:", error);
+        document.getElementById("radarChartDiv").innerHTML = "<div class='error'>Radar chart failed to load.</div>";
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
       document.getElementById('filter-text-val').addEventListener('keypress', function (event) {
         if (event.key === 'Enter') {
@@ -285,70 +116,7 @@
       });
     });
 
-    window.onload = function () {
-      document.getElementById('filter-text-val').focus();
-    };
+    window.onload = () => document.getElementById('filter-text-val').focus();
   </script>
-
-<!-- Radar Chart Section -->
-<div style="margin-top: 40px;">
-  <h2>Why This Joke?</h2>
-  <div id="radarChartDiv" style="width:600px;height:500px;margin:auto;"></div>
-</div>
-
-<!-- Plotly CDN -->
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-
-<script>
-let lastSearchQuery = "";
-
-function answerBoxTemplate(jokesWithScores) {
-  let content = `<div class='response-container'><ul class='jokes'>`;
-  if (jokesWithScores.length > 0) {
-    content += jokesWithScores.map((item, index) =>
-      `<li>
-        <div class="joke-item">
-          <div class="joke-content">😂 ${item.joke}</div>
-          <div class="score-container">
-            <span class="score-badge">Score: ${item.score.toFixed(2)}</span>
-            <button onclick="showExplanation(lastSearchQuery, ${index})" style="margin-top: 6px;">Explain</button>
-          </div>
-        </div>
-      </li>`
-    ).join('');
-  } else {
-    content += "<li><div class='joke-item'>No jokes found. Try a different search.</div></li>";
-  }
-  content += "</ul></div>";
-  return content;
-}
-
-async function showExplanation(query, jokeIndex) {
-  try {
-    document.getElementById("radarChartDiv").innerHTML = "<div class='loading'>Loading chart...</div>";
-
-    const response = await fetch("/explanation", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: query, joke_index: jokeIndex })
-    });
-
-    const chartData = await response.json();
-
-    if (!chartData.data || chartData.data.length === 0) {
-      document.getElementById("radarChartDiv").innerHTML = "<div class='error'>No relevance data available for this joke.</div>";
-      return;
-    }
-
-    Plotly.newPlot("radarChartDiv", chartData.data, chartData.layout);
-  } catch (error) {
-    console.error("Radar chart failed:", error);
-    document.getElementById("radarChartDiv").innerHTML = "<div class='error'>Radar chart failed to load.</div>";
-  }
-}
-</script>
-
-
 </body>
-
 </html>
