@@ -288,6 +288,30 @@
       document.getElementById('filter-text-val').focus();
     };
   </script>
+
+  <!-- Radar Chart Section -->
+<div style="margin-top: 40px;">
+  <h2>Why This Joke?</h2>
+  <div id="radarChartDiv" style="width:600px;height:500px;margin:auto;"></div>
+  <button onclick="showExplanation('tech joke', 0)" style="margin-top: 10px;">Explain Joke Match</button>
+</div>
+
+<!-- Plotly CDN -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<script>
+async function showExplanation(query, jokeIndex) {
+    const response = await fetch("/explanation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: query, joke_index: jokeIndex })
+    });
+
+    const chartData = await response.json();
+    Plotly.newPlot("radarChartDiv", chartData.data, chartData.layout);
+}
+</script>
+
 </body>
 
 </html>
