@@ -6,7 +6,6 @@ import numpy as np
 from python.query_processing import QueryProcessor
 from python.joke_ranker import JokeRanker
 from python.text_utils import preprocess
-import plotly.graph_objects as go
 
 os.environ['ROOT_PATH'] = os.path.abspath(os.path.join("..", os.curdir))
 current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -122,9 +121,6 @@ def explain():
         search_query = ' '.join(query_info['keywords'])
 
         ranked = joke_ranker.rank_jokes(search_query, top_n=5)
-        print("Top 5 jokes:", [j for j, _ in ranked])
-
-        # Loosely match using preprocessed joke body
         joke_index = next(
             (i for i, (text, _) in enumerate(ranked)
              if preprocess(joke_text) in preprocess(text)),
@@ -145,48 +141,20 @@ def explain():
         normalized = relevance / total if total > 0 else np.zeros_like(relevance)
 
         top_indices = np.argsort(normalized)[-10:][::-1]
-        top_values = [normalized[i] for i in top_indices]
-
         feature_names = joke_ranker.vectorizer.get_feature_names_out()
-        component_words = []
-        for i in top_indices:
-            top_word_indices = np.argsort(joke_ranker.reducer.components_[i])[-1:]
-            label = feature_names[top_word_indices[0]]
-            component_words.append(label)
 
-        if not top_values or not component_words:
-            print("No relevance values to display.")
-            return jsonify({
-                "data": [],
-                "layout": {
-                    "title": "No relevance data available for this joke.",
-                    "annotations": [
-                        {
-                            "text": "No relevance found",
-                            "showarrow": False,
-                            "font": { "size": 16 },
-                            "xref": "paper", "yref": "paper",
-                            "x": 0.5, "y": 0.5,
-                            "xanchor": "center", "yanchor": "middle"
-                        }
-                    ]
-                }
+        keyword_weights = []
+        for i in top_indices:
+            top_word_index = np.argsort(joke_ranker.reducer.components_[i])[-1:]
+            keyword = feature_names[top_word_index[0]]
+            keyword_weights.append({
+                "word": keyword,
+                "weight": round(normalized[i], 4)
             })
 
-        fig = go.Figure(data=go.Scatterpolar(
-            r=top_values + [top_values[0]],
-            theta=component_words + [component_words[0]],
-            fill='toself'
-        ))
-        fig.update_layout(
-            title="Top Contributing Features",
-            polar=dict(
-                radialaxis=dict(visible=True, range=[0, max(top_values) * 1.2])
-            ),
-            showlegend=False
-        )
+        print("Top keywords:", keyword_weights)
 
-        return jsonify(fig.to_dict())
+        return jsonify({ "keywords": keyword_weights })
 
     except Exception as e:
         print("Explanation error:", e)
