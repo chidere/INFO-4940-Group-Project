@@ -5,18 +5,18 @@ import pandas as pd
 from python.query_processing import QueryProcessor
 from python.joke_ranker import JokeRanker
 import plotly.graph_objects as go
+import numpy as np
 
-# ROOT_PATH for linking with all your files. 
-# Feel free to use a config.py or settings.py with a global export variable
-os.environ['ROOT_PATH'] = os.path.abspath(os.path.join("..",os.curdir))
+# Set ROOT_PATH
+os.environ['ROOT_PATH'] = os.path.abspath(os.path.join("..", os.curdir))
 
-# Get the directory of the current script
+# Get current directory
 current_directory = os.path.dirname(os.path.abspath(__file__))
 
-# Specify the path to the csv file relative to the current script
+# Dataset path
 dataset_path = os.path.join(current_directory, 'dataset.csv')
 
-# Load jokes from CSV
+# Load jokes
 try:
     jokes_df = pd.read_csv(dataset_path)
     print(f"Successfully loaded {len(jokes_df)} jokes from dataset")
@@ -33,7 +33,6 @@ joke_texts = []
 joke_data_map = {}
 
 for idx, row in jokes_df.iterrows():
-    # Create standardized joke text
     joke_text = f"{row.get('title', '')} {row.get('body', '')}".strip()
     joke_texts.append(joke_text)
     joke_data_map[joke_text] = row.to_dict()
@@ -42,40 +41,30 @@ joke_ranker = JokeRanker(joke_texts)
 
 def joke_search(query, category=""):
     try:
-        # Process the query to extract information
         query_info = query_processor.process_query(query)
         print(f"Processed query: {query_info}")
         
-        # Override category if provided as a parameter
         if category:
             query_info['category'] = category
             
-        # Get keywords for search
         search_query = ' '.join(query_info['keywords'])
         print(f"Searching with keywords: {search_query}")
         
-        # Get ranked jokes using cosine similarity
         ranked_jokes = joke_ranker.rank_jokes(search_query, 5)
         print(f"Found {len(ranked_jokes)} ranked jokes")
         
-        # If a category filter is active, filter the ranked jokes by category
         filtered_results = []
         for joke_text, score in ranked_jokes:
             if joke_text in joke_data_map:
                 joke_data = joke_data_map[joke_text]
-                
-                # Apply category filter if specified
-                if category and category != 'general' and category != '':
-                    if category.lower() not in joke_data.get('category', '').lower():
-                        continue  # Skip jokes that don't match the category
-                
+                if category and category.lower() not in joke_data.get('category', '').lower():
+                    continue
                 filtered_results.append({
                     'title': joke_data.get('title', ''),
                     'body': joke_data.get('body', ''),
                     'category': joke_data.get('category', ''),
                     'score': float(score)
                 })
-        
         return filtered_results
     except Exception as e:
         print(f"Error in joke_search: {str(e)}")
@@ -95,8 +84,6 @@ def search_jokes():
     
     try:
         jokes = joke_search(query, category)
-        
-        # Format joke texts and scores for response
         jokes_with_scores = []
         for joke in jokes:
             joke_text = ""
@@ -104,42 +91,30 @@ def search_jokes():
                 joke_text = f"{joke['title']}: {joke['body']}".encode('utf-8', errors='replace').decode('utf-8')
             elif joke.get('body'):
                 joke_text = joke['body'].encode('utf-8', errors='replace').decode('utf-8')
-
                 
             jokes_with_scores.append({
                 "joke": joke_text,
                 "score": joke.get('score', 1.0)
             })
-            
-        return jsonify({
-            "jokes_with_scores": jokes_with_scores
-        })
+        return jsonify({ "jokes_with_scores": jokes_with_scores })
     except Exception as e:
         print(f"Error in search_jokes: {str(e)}")
-        return jsonify({
-            "error": str(e),
-            "jokes_with_scores": []
-        }), 500
+        return jsonify({ "error": str(e), "jokes_with_scores": [] }), 500
 
 @app.route("/categories")
 def get_categories():
-    """Return all available joke categories"""
     categories = jokes_df['category'].dropna().unique().tolist()
     return jsonify(categories)
 
 @app.route("/joke/random")
 def random_joke():
-    """Return a random joke"""
     if len(jokes_df) > 0:
-        random_joke = jokes_df.sample(1).iloc[0].to_dict()
-        return jsonify(random_joke)
+        return jsonify(jokes_df.sample(1).iloc[0].to_dict())
     else:
-        return jsonify({"error": "No jokes available"}), 404
+        return jsonify({ "error": "No jokes available" }), 404
 
-# Debug endpoint to check if jokes are loaded correctly
 @app.route("/debug/jokes")
 def debug_jokes():
-    """Return information about loaded jokes"""
     return jsonify({
         "total_jokes": len(jokes_df),
         "joke_texts": len(joke_texts),
@@ -154,21 +129,24 @@ def explain():
         query = data.get("query", "")
         joke_text = data.get("joke_text", "")
 
-        # Re-process the query to match ranking logic
+        print("=== /explanation ===")
+        print("Query:", query)
+        print("Joke received:", joke_text)
+
         query_info = query_processor.process_query(query)
         search_query = ' '.join(query_info['keywords'])
 
-        # Get ranked jokes again
         ranked = joke_ranker.rank_jokes(search_query, top_n=5)
+        print("Ranked:", [j for j, _ in ranked])
 
-        # Find the joke index in ranked results
-        joke_index = next((i for i, (text, _) in enumerate(ranked) if text == joke_text), -1)
+        # Loose matching: check if body appears in ranked joke
+        joke_index = next((i for i, (text, _) in enumerate(ranked)
+                           if joke_text.split(":")[-1].strip() in text), -1)
         if joke_index == -1:
-            return jsonify({"error": "Joke not found in ranked list."}), 400
+            return jsonify({ "error": "Joke not found in ranked list." }), 400
 
-        true_index = joke_ranker.jokes.index(joke_text)
+        true_index = joke_ranker.jokes.index(ranked[joke_index][0])
 
-        # Vector math
         cleaned_query = joke_ranker.preprocess_text(query)
         query_vec = joke_ranker.vectorizer.transform([cleaned_query])
         query_reduced = joke_ranker.reducer.transform(query_vec)[0]
@@ -188,9 +166,12 @@ def explain():
             label = feature_names[top_word_indices[0]]
             component_words.append(label)
 
+        if not top_values or not component_words:
+            return jsonify({ "error": "No relevance data to display." })
+
         fig = go.Figure(data=go.Scatterpolar(
-            r=top_values + [top_values[0]],  # repeat first to close shape
-            theta=component_words + [component_words[0]],  # repeat first
+            r=top_values + [top_values[0]],
+            theta=component_words + [component_words[0]],
             fill='toself'
         ))
         fig.update_layout(
@@ -205,7 +186,7 @@ def explain():
 
     except Exception as e:
         print("Explanation error:", e)
-        return jsonify({"error": str(e)}), 500
+        return jsonify({ "error": str(e) }), 500
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
