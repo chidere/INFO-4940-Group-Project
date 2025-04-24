@@ -6,7 +6,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Open+Sans:wght@500&display=swap" rel="stylesheet">
-  <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
 </head>
 
 <body style="background-color: #111; color: white; font-family: 'Open Sans', sans-serif; margin: 0; padding: 0; text-align: center;">
@@ -35,7 +34,7 @@
 
     <div style="margin-top: 40px;">
       <h2>Why This Joke?</h2>
-      <div id="radarChartDiv" style="width:600px;height:500px;margin:auto; border: 1px solid #444;"></div>
+      <div id="keywordListDiv" style="margin-top: 20px;"></div>
     </div>
   </div>
 
@@ -69,6 +68,7 @@
 
     function filterText() {
       document.getElementById("answer-box").innerHTML = "";
+      document.getElementById("keywordListDiv").innerHTML = "";
       let query = document.getElementById("filter-text-val").value;
       lastSearchQuery = query;
       let category = document.getElementById("category-filter").value;
@@ -102,7 +102,7 @@
 
     async function showExplanation(query, jokeText) {
       try {
-        document.getElementById("radarChartDiv").innerHTML = "<div class='loading'>Loading chart...</div>";
+        document.getElementById("keywordListDiv").innerHTML = "<div class='loading'>Loading explanation...</div>";
 
         const response = await fetch("/explanation", {
           method: "POST",
@@ -110,22 +110,27 @@
           body: JSON.stringify({ query, joke_text: jokeText })
         });
 
-        const chartData = await response.json();
-        console.log("Chart data:", chartData);
-
-        if (!chartData.data || chartData.data.length === 0) {
-          document.getElementById("radarChartDiv").innerHTML = "<div class='error'>No relevance data available for this joke.</div>";
+        const result = await response.json();
+        if (!result.keywords || result.keywords.length === 0) {
+          document.getElementById("keywordListDiv").innerHTML = "<div class='error'>No relevant features found for this joke.</div>";
           return;
         }
 
-        Plotly.newPlot("radarChartDiv", chartData.data, chartData.layout);
+        const listHtml = result.keywords.map(item =>
+          `<li><strong>${item.word}</strong>: ${item.weight}</li>`
+        ).join('');
+
+        document.getElementById("keywordListDiv").innerHTML = `
+          <ul style="list-style: none; padding-left: 0; font-size: 16px; text-align: left; max-width: 500px; margin: auto;">
+            ${listHtml}
+          </ul>
+        `;
       } catch (error) {
-        console.error("Radar chart failed:", error);
-        document.getElementById("radarChartDiv").innerHTML = "<div class='error'>Radar chart failed to load.</div>";
+        console.error("Keyword explanation failed:", error);
+        document.getElementById("keywordListDiv").innerHTML = "<div class='error'>Could not load explanation.</div>";
       }
     }
 
-    // Handle delegated click for dynamically created "Explain" buttons
     document.addEventListener("click", function (e) {
       if (e.target && e.target.classList.contains("explain-btn")) {
         const joke = e.target.getAttribute("data-joke");
