@@ -6,6 +6,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Open+Sans:wght@500&display=swap" rel="stylesheet">
+  <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
 </head>
 
 <body style="background-color: #111; color: white; font-family: 'Open Sans', sans-serif; margin: 0; padding: 0; text-align: center;">
@@ -31,14 +32,12 @@
     </div>
 
     <div id="answer-box"></div>
+
     <div style="margin-top: 40px;">
       <h2>Why This Joke?</h2>
-      <div id="radarChartDiv" style="width:600px;height:500px;margin:auto;"></div>
+      <div id="radarChartDiv" style="width:600px;height:500px;margin:auto; border: 1px solid #444;"></div>
     </div>
   </div>
-
-  <!-- Plotly CDN -->
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
   <script>
     let lastSearchQuery = "";
@@ -56,7 +55,7 @@
               <div class="joke-content" style="flex: 1; padding-right: 80px;">😂 ${item.joke}</div>
               <div class="score-container" style="position: absolute; top: 14px; right: 14px; text-align: center;">
                 <span class="score-badge" style="background-color: #ff0066; color: white; padding: 4px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;">Score: ${item.score.toFixed(2)}</span><br/>
-                <button onclick="showExplanation(lastSearchQuery, \`${item.joke}\`)">Explain</button>
+                <button class="explain-btn" data-joke="${item.joke.replace(/"/g, '&quot;')}">Explain</button>
               </div>
             </div>
           </li>`
@@ -104,19 +103,21 @@
     async function showExplanation(query, jokeText) {
       try {
         document.getElementById("radarChartDiv").innerHTML = "<div class='loading'>Loading chart...</div>";
-    
+
         const response = await fetch("/explanation", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ query, joke_text: jokeText })
         });
-    
+
         const chartData = await response.json();
+        console.log("Chart data:", chartData);
+
         if (!chartData.data || chartData.data.length === 0) {
           document.getElementById("radarChartDiv").innerHTML = "<div class='error'>No relevance data available for this joke.</div>";
           return;
         }
-    
+
         Plotly.newPlot("radarChartDiv", chartData.data, chartData.layout);
       } catch (error) {
         console.error("Radar chart failed:", error);
@@ -124,6 +125,13 @@
       }
     }
 
+    // Handle delegated click for dynamically created "Explain" buttons
+    document.addEventListener("click", function (e) {
+      if (e.target && e.target.classList.contains("explain-btn")) {
+        const joke = e.target.getAttribute("data-joke");
+        showExplanation(lastSearchQuery, joke);
+      }
+    });
 
     document.addEventListener('DOMContentLoaded', function () {
       document.getElementById('filter-text-val').addEventListener('keypress', function (event) {
