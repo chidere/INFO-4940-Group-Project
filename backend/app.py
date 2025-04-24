@@ -122,9 +122,16 @@ def explain():
         search_query = ' '.join(query_info['keywords'])
 
         ranked = joke_ranker.rank_jokes(search_query, top_n=5)
+        print("Top 5 jokes:", [j for j, _ in ranked])
+
+        def loose_match(query_joke, candidate_joke):
+            q_words = set(preprocess(query_joke).split())
+            c_words = set(preprocess(candidate_joke).split())
+            return len(q_words & c_words) >= max(1, len(q_words) // 2)
+
         joke_index = next(
             (i for i, (text, _) in enumerate(ranked)
-             if preprocess(joke_text) in preprocess(text)),
+             if loose_match(joke_text, text)),
             -1
         )
         if joke_index == -1:
@@ -156,16 +163,14 @@ def explain():
                 "data": [],
                 "layout": {
                     "title": "No relevant features found for this joke.",
-                    "annotations": [
-                        {
-                            "text": "No relevance found",
-                            "showarrow": False,
-                            "font": { "size": 16 },
-                            "xref": "paper", "yref": "paper",
-                            "x": 0.5, "y": 0.5,
-                            "xanchor": "center", "yanchor": "middle"
-                        }
-                    ]
+                    "annotations": [{
+                        "text": "No relevance found",
+                        "showarrow": False,
+                        "font": { "size": 16 },
+                        "xref": "paper", "yref": "paper",
+                        "x": 0.5, "y": 0.5,
+                        "xanchor": "center", "yanchor": "middle"
+                    }]
                 }
             })
 
