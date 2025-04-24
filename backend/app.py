@@ -153,22 +153,23 @@ def explain():
         data = request.get_json()
         query = data.get("query", "")
         joke_text = data.get("joke_text", "")
-        true_index = joke_ranker.jokes.index(joke_text)
-
 
         # Re-process the query to match ranking logic
         query_info = query_processor.process_query(query)
         search_query = ' '.join(query_info['keywords'])
 
-        # Get ranked jokes again to find the real index
+        # Get ranked jokes again
         ranked = joke_ranker.rank_jokes(search_query, top_n=5)
-        if joke_index >= len(ranked):
-            return jsonify({"error": "Invalid joke index."}), 400
 
-        joke_text, _ = ranked[joke_index]
+        # Find the joke index in ranked results
+        joke_index = next((i for i, (text, _) in enumerate(ranked) if text == joke_text), -1)
+        if joke_index == -1:
+            return jsonify({"error": "Joke not found in ranked list."}), 400
+
         true_index = joke_ranker.jokes.index(joke_text)
 
-        cleaned_query = preprocess(query)
+        # Vector math
+        cleaned_query = joke_ranker.preprocess_text(query)
         query_vec = joke_ranker.vectorizer.transform([cleaned_query])
         query_reduced = joke_ranker.reducer.transform(query_vec)[0]
         joke_reduced = joke_ranker.joke_reduced[true_index]
@@ -188,20 +189,15 @@ def explain():
             component_words.append(label)
 
         fig = go.Figure(data=go.Scatterpolar(
-            r=top_values,
-            theta=component_words,
+            r=top_values + [top_values[0]],  # repeat first to close shape
+            theta=component_words + [component_words[0]],  # repeat first
             fill='toself'
         ))
         fig.update_layout(
             title="Top Contributing Features",
             polar=dict(
-                bgcolor='rgba(0,0,0,0)',
-                radialaxis=dict(visible=True, range=[0, max(top_values)*1.2], tickfont=dict(color='white')),
-                angularaxis=dict(tickfont=dict(color='white'))
+                radialaxis=dict(visible=True, range=[0, max(top_values)*1.2])
             ),
-            paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white'),
-            margin=dict(l=30, r=30, t=30, b=30),
             showlegend=False
         )
 
@@ -210,7 +206,6 @@ def explain():
     except Exception as e:
         print("Explanation error:", e)
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
