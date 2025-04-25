@@ -40,22 +40,20 @@ def joke_search(query, category=""):
         if category:
             query_info['category'] = category
         search_query = ' '.join(query_info['keywords'])
-        ranked_jokes = joke_ranker.rank_jokes(search_query, 5)
+
+        ranked_jokes = joke_ranker.rank_jokes(search_query, 5, return_latent=True)
         filtered_results = []
-        for joke_text, score in ranked_jokes:
+
+        for joke_text, score, latent_vec in ranked_jokes:
             if joke_text in joke_data_map:
-                joke_data = joke_data_map[joke_text]
-                if category and category.lower() not in joke_data.get('category', '').lower():
-                    continue
-                filtered_results.append({
-                    'title': joke_data.get('title', ''),
-                    'body': joke_data.get('body', ''),
-                    'category': joke_data.get('category', ''),
-                    'score': float(score)
-                })
+                joke_info = joke_data_map[joke_text]
+                joke_info["score"] = score
+                joke_info["latent_dimensions"] = latent_vec.tolist()[:10]  # top 10 weights
+                filtered_results.append(joke_info)
+
         return filtered_results
     except Exception as e:
-        print(f"Error in joke_search: {str(e)}")
+        print("Error during joke search:", str(e))
         return []
 
 @app.route("/")
