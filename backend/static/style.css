@@ -142,8 +142,8 @@
     border: none;
     outline: 0;
     background: transparent;
-    color: white;
-    font-family: 'Open Sans', sans-serif;
+    color: #CCCCCC;
+    font-family: 'Roboto', sans-serif;
 }
 
 #answer-box {
@@ -171,7 +171,7 @@
     margin-top: 10px;
     font-size: 16px;
     text-align: center;
-    color: #fff;
+    color: ##CCCCCC;
     font-style: italic;
     transition: transform 0.2s ease-in-out;
 }
@@ -225,14 +225,14 @@
 .loading {
     text-align: center;
     padding: 20px;
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'Roboto', sans-serif;
     color: #666;
 }
 
 .error {
     text-align: center;
     padding: 20px;
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'Roboto', sans-serif;
     color: #ff5252;
 }
 .latent-box {
