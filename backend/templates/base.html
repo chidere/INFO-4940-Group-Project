@@ -39,126 +39,129 @@
   </div>
 
   <script>
-    let lastSearchQuery = "";
+  let lastSearchQuery = "";
 
-    function sendFocus() {
-      document.getElementById('filter-text-val').focus();
-    }
+  function sendFocus() {
+    document.getElementById('filter-text-val').focus();
+  }
 
-    function answerBoxTemplate(jokesWithScores) {
-      let content = `<div class='response-container'><ul class='jokes' style="list-style: none; padding: 0;">`;
-      if (jokesWithScores.length > 0) {
-        content += jokesWithScores.map((item, index) =>
-          `<li style="background: #1a1a1a; margin-bottom: 12px; border-left: 5px solid #ffcc00; border-radius: 8px; font-size: 16px; line-height: 1.5; color: #eee;">
-            <div class="joke-item" style="display: flex; flex-direction: row; align-items: flex-start; position: relative; min-height: 60px; padding: 14px;">
-              <div class="joke-content" style="flex: 1; padding-right: 80px;">
-                😂 ${item.joke}
-                ${item.latent_dimensions ? `
-                  <div style="margin-top: 10px; font-size: 13px; color: #bbb;">
-                    <strong>Top Latent Dimensions:</strong>
-                    <ol style="margin-top: 5px; padding-left: 20px;">
-                      ${item.latent_dimensions.slice(0, 10).map(dim => `<li>${dim.toFixed(4)}</li>`).join('')}
-                    </ol>
-                  </div>
-                ` : ''}
-              </div>
-              <div class="score-container" style="position: absolute; top: 14px; right: 14px; text-align: center;">
-                <span class="score-badge" style="background-color: #ff0066; color: white; padding: 4px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;">Score: ${item.score.toFixed(2)}</span><br/>
-                <button class="explain-btn" data-joke="${item.joke.replace(/"/g, '&quot;')}">Explain</button>
+  function answerBoxTemplate(jokesWithScores) {
+    let content = `<div class='response-container'><ul class='jokes' style="list-style: none; padding: 0;">`;
+    if (jokesWithScores.length > 0) {
+      content += jokesWithScores.map((item, index) =>
+        `<li style="background: #1a1a1a; margin-bottom: 12px; border-left: 5px solid #ffcc00; border-radius: 8px; font-size: 16px; line-height: 1.5; color: #eee;">
+          <div class="joke-item" style="display: flex; flex-direction: row; align-items: flex-start; position: relative; min-height: 60px; padding: 14px;">
+            <div class="joke-content" style="flex: 1; padding-right: 80px;">
+              😂 ${item.joke}
+              <div class="latent-box" id="latent-${index}" style="display: none; background: #222; border-left: 3px solid #ffcc00; padding: 10px 16px; border-radius: 6px; margin-top: 10px;">
+                <strong style="color: #ffcc00;">Top Latent Dimensions:</strong>
+                <ol style="margin: 5px 0 0 20px; color: #ccc; font-size: 13px;">
+                  ${item.latent_dimensions?.slice(0, 10).map(dim => `<li>${dim.toFixed(4)}</li>`).join('') || '<li>No latent dimensions available</li>'}
+                </ol>
               </div>
             </div>
-          </li>`
-        ).join('');
-      } else {
-        content += "<li><div class='joke-item'>No jokes found. Try a different search.</div></li>";
-      }
-      content += "</ul></div>";
-      return content;
+            <div class="score-container" style="position: absolute; top: 14px; right: 14px; text-align: center;">
+              <span class="score-badge" style="background-color: #ff0066; color: white; padding: 4px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;">Score: ${item.score.toFixed(2)}</span><br/>
+              <button class="explain-btn" data-index="${index}" style="margin-top: 4px; font-size: 12px;">Explain</button>
+            </div>
+          </div>
+        </li>`
+      ).join('');
+    } else {
+      content += "<li><div class='joke-item'>No jokes found. Try a different search.</div></li>";
     }
+    content += "</ul></div>";
+    return content;
+  }
 
-    function filterText() {
-      document.getElementById("answer-box").innerHTML = "";
-      document.getElementById("keywordListDiv").innerHTML = "";
-      let query = document.getElementById("filter-text-val").value;
-      lastSearchQuery = query;
-      let category = document.getElementById("category-filter").value;
+  function filterText() {
+    document.getElementById("answer-box").innerHTML = "";
+    document.getElementById("keywordListDiv").innerHTML = "";
+    let query = document.getElementById("filter-text-val").value;
+    lastSearchQuery = query;
+    let category = document.getElementById("category-filter").value;
 
-      if (query.trim() !== "") {
-        document.getElementById("answer-box").innerHTML = "<div class='loading'>Searching for jokes...</div>";
+    if (query.trim() !== "") {
+      document.getElementById("answer-box").innerHTML = "<div class='loading'>Searching for jokes...</div>";
 
-        fetch("/roast-it?" + new URLSearchParams({ query, category }).toString())
-          .then(response => response.json())
-          .then(data => {
-            document.getElementById("answer-box").innerHTML = "";
-            let tempDiv = document.createElement("div");
+      fetch("/roast-it?" + new URLSearchParams({ query, category }).toString())
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById("answer-box").innerHTML = "";
+          let tempDiv = document.createElement("div");
 
-            if (data.jokes_with_scores) {
-              tempDiv.innerHTML = answerBoxTemplate(data.jokes_with_scores);
-            } else if (data.jokes) {
-              const jokesWithScores = data.jokes.map(joke => ({ joke: joke, score: 1.0 }));
-              tempDiv.innerHTML = answerBoxTemplate(jokesWithScores);
-            } else {
-              tempDiv.innerHTML = "<div class='error'>No jokes found</div>";
-            }
+          if (data.jokes_with_scores) {
+            tempDiv.innerHTML = answerBoxTemplate(data.jokes_with_scores);
+          } else if (data.jokes) {
+            const jokesWithScores = data.jokes.map(joke => ({ joke: joke, score: 1.0 }));
+            tempDiv.innerHTML = answerBoxTemplate(jokesWithScores);
+          } else {
+            tempDiv.innerHTML = "<div class='error'>No jokes found</div>";
+          }
 
-            document.getElementById("answer-box").appendChild(tempDiv);
-          })
-          .catch(error => {
-            console.error("Error fetching jokes:", error);
-            document.getElementById("answer-box").innerHTML = "<div class='error'>Something went wrong. Please try again later.</div>";
-          });
-      }
-    }
-
-    async function showExplanation(query, jokeText) {
-      try {
-        document.getElementById("keywordListDiv").innerHTML = "<div class='loading'>Loading explanation...</div>";
-
-        const response = await fetch("/explanation", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, joke_text: jokeText })
+          document.getElementById("answer-box").appendChild(tempDiv);
+        })
+        .catch(error => {
+          console.error("Error fetching jokes:", error);
+          document.getElementById("answer-box").innerHTML = "<div class='error'>Something went wrong. Please try again later.</div>";
         });
+    }
+  }
 
-        const result = await response.json();
-        if (!result.keywords || result.keywords.length === 0) {
-          document.getElementById("keywordListDiv").innerHTML = "<div class='error'>No relevant features found for this joke.</div>";
-          return;
-        }
+  async function showExplanation(query, jokeText) {
+    try {
+      document.getElementById("keywordListDiv").innerHTML = "<div class='loading'>Loading explanation...</div>";
 
-        const listHtml = result.keywords.map(item =>
-          `<li><strong>${item.word}</strong>: ${item.weight}</li>`
-        ).join('');
+      const response = await fetch("/explanation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, joke_text: jokeText })
+      });
 
-        document.getElementById("keywordListDiv").innerHTML = `
-          <ul style="list-style: none; padding-left: 0; font-size: 16px; text-align: left; max-width: 500px; margin: auto;">
-            ${listHtml}
-          </ul>
-        `;
-      } catch (error) {
-        console.error("Keyword explanation failed:", error);
-        document.getElementById("keywordListDiv").innerHTML = "<div class='error'>Could not load explanation.</div>";
+      const result = await response.json();
+      if (!result.keywords || result.keywords.length === 0) {
+        document.getElementById("keywordListDiv").innerHTML = "<div class='error'>No relevant features found for this joke.</div>";
+        return;
+      }
+
+      const listHtml = result.keywords.map(item =>
+        `<li><strong>${item.word}</strong>: ${item.weight}</li>`
+      ).join('');
+
+      document.getElementById("keywordListDiv").innerHTML = `
+        <ul style="list-style: none; padding-left: 0; font-size: 16px; text-align: left; max-width: 500px; margin: auto;">
+          ${listHtml}
+        </ul>
+      `;
+    } catch (error) {
+      console.error("Keyword explanation failed:", error);
+      document.getElementById("keywordListDiv").innerHTML = "<div class='error'>Could not load explanation.</div>";
+    }
+  }
+
+  document.addEventListener("click", function (e) {
+    if (e.target && e.target.classList.contains("explain-btn")) {
+      const index = e.target.getAttribute("data-index");
+      const latentBox = document.getElementById(`latent-${index}`);
+      if (latentBox) {
+        const isVisible = latentBox.style.display === "block";
+        latentBox.style.display = isVisible ? "none" : "block";
+        e.target.textContent = isVisible ? "Explain" : "Hide";
       }
     }
+  });
 
-    document.addEventListener("click", function (e) {
-      if (e.target && e.target.classList.contains("explain-btn")) {
-        const joke = e.target.getAttribute("data-joke");
-        showExplanation(lastSearchQuery, joke);
+  document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('filter-text-val').addEventListener('keypress', function (event) {
+      if (event.key === 'Enter') {
+        filterText();
       }
     });
+  });
 
-    document.addEventListener('DOMContentLoaded', function () {
-      document.getElementById('filter-text-val').addEventListener('keypress', function (event) {
-        if (event.key === 'Enter') {
-          filterText();
-        }
-      });
-    });
-
-    window.onload = function () {
-      document.getElementById('filter-text-val').focus();
-    };
-  </script>
+  window.onload = function () {
+    document.getElementById('filter-text-val').focus();
+  };
+</script>
 </body>
 </html>
