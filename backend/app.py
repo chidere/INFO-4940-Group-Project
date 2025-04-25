@@ -193,5 +193,23 @@ def explain():
         print("Explanation error:", e)
         return jsonify({ "error": str(e) }), 500
 
+
+joke_votes = {}
+
+@app.route("/upvote", methods=["POST"])
+def upvote():
+    try:
+        data = request.get_json()
+        joke = data.get("joke_text")
+
+        if not joke:
+            return jsonify({"error": "No joke provided"}), 400
+
+        joke_votes[joke] = joke_votes.get(joke, 0) + 1
+        return jsonify({"status": "success", "votes": joke_votes[joke]})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)

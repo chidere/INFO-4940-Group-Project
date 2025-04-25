@@ -63,6 +63,7 @@
             <div class="score-container" style="position: absolute; top: 14px; right: 14px; text-align: center;">
               <span class="score-badge" style="background-color: #ff0066; color: white; padding: 4px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;">Score: ${item.score.toFixed(2)}</span><br/>
               <button class="explain-btn" data-index="${index}" style="margin-top: 4px; font-size: 12px;">Explain</button>
+              <button class="like-btn" data-joke="${encodeURIComponent(item.joke)}" style="margin-top: 4px; font-size: 12px; background-color: #222; border: 1px solid #ffcc00; color: #ffcc00; padding: 4px 10px; border-radius: 8px; cursor: pointer;">👍 Like</button>
             </div>
           </div>
         </li>`
@@ -162,6 +163,26 @@
   window.onload = function () {
     document.getElementById('filter-text-val').focus();
   };
+  
+  document.addEventListener("click", function (e) {
+  if (e.target && e.target.classList.contains("like-btn")) {
+    const joke = decodeURIComponent(e.target.getAttribute("data-joke"));
+    
+    fetch("/upvote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ joke_text: joke })
+    })
+    .then(response => response.json())
+    .then(data => {
+      e.target.textContent = `👍 Liked (${data.votes})`; // You can update UI with new count
+      e.target.disabled = true; // Optional: disable after vote
+    })
+    .catch(err => {
+      console.error("Failed to upvote joke", err);
+    });
+  }
+});
 </script>
 </body>
 </html>
