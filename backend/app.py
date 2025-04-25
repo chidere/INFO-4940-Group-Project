@@ -75,9 +75,11 @@ def search_jokes():
                 joke_text = f"{joke['title']}: {joke['body']}".encode('utf-8', errors='replace').decode('utf-8')
             elif joke.get('body'):
                 joke_text = joke['body'].encode('utf-8', errors='replace').decode('utf-8')
+        
             jokes_with_scores.append({
                 "joke": joke_text,
-                "score": joke.get('score', 1.0)
+                "score": joke.get('score', 1.0),
+                "latent_dimensions": joke.get("latent_dimensions", [])  # ✅ Now included
             })
         return jsonify({ "jokes_with_scores": jokes_with_scores })
     except Exception as e:
