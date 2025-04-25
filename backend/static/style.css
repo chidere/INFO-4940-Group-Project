@@ -171,8 +171,8 @@
     margin-top: 10px;
     font-size: 16px;
     text-align: center;
-    color: ##CCCCCC;
-    font-style: italic;
+    color: #CCCCCC;
+    font-style: normal;
     transition: transform 0.2s ease-in-out;
 }
 
@@ -235,13 +235,59 @@
     font-family: 'Roboto', sans-serif;
     color: #ff5252;
 }
+
 .latent-box {
-  transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
 }
+
 .latent-box ol {
-  padding-left: 20px;
-  margin: 5px 0 0 0;
+    padding-left: 20px;
+    margin: 5px 0 0 0;
 }
+
 .latent-box li {
-  line-height: 1.3;
+    line-height: 1.3;
+}
+
+.joke-preview {
+    position: relative;
+    max-height: 120px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.joke-preview.expanded {
+    max-height: none;
+}
+
+.joke-preview.collapsible::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 30px;
+    background: linear-gradient(transparent, #1a1a1a);
+    pointer-events: none;
+}
+
+.joke-preview.expanded::after {
+    display: none;
+}
+
+.expand-button {
+    background-color: #333;
+    color: #ffcc00;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.2s;
+    margin-top: 5px;
+    display: inline-block;
+}
+
+.expand-button:hover {
+    background-color: #444;
 }
