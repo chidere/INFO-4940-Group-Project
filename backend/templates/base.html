@@ -90,29 +90,33 @@
           const isLongJoke = countLines(item.joke) > 5;
 
           return `<li style="background: #1a1a1a; margin-bottom: 12px; border-left: 5px solid #ffcc00; border-radius: 8px; font-size: 16px; line-height: 1.5; color: #eee;">
-        <div class="joke-item" style="display: flex; flex-direction: row; align-items: flex-start; position: relative; min-height: 60px; padding: 14px;">
-          <div class="joke-content" style="flex: 1; padding-right: 80px;">
-            <div id="joke-preview-${jokeId}" class="joke-preview ${isLongJoke ? 'collapsible' : ''}">
-              😂 ${item.joke}
-            </div>
-            ${isLongJoke ?
-              `<button class="expand-button" onclick="toggleJokeExpansion(this, '${jokeId}')">
-                Show More <i class="fas fa-chevron-down"></i>
-              </button>` : ''}
-            <div class="latent-box" id="latent-${index}" style="display: none; background: #222; border-left: 3px solid #ffcc00; padding: 10px 16px; border-radius: 6px; margin-top: 10px;">
-              <strong style="color: #ffcc00;">Top Latent Dimensions:</strong>
-              <ol style="margin: 5px 0 0 20px; color: #ccc; font-size: 13px;">
-                ${item.latent_dimensions?.slice(0, 10).map(dim => `<li>${dim.toFixed(4)}</li>`).join('') || '<li>No latent dimensions available</li>'}
-              </ol>
-            </div>
-          </div>
-          <div class="score-container" style="position: absolute; top: 14px; right: 14px; text-align: center;">
-            <span class="score-badge" style="background-color: #ff0066; color: white; padding: 4px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;">Score: ${item.score.toFixed(2)}</span><br/>
-            <button class="explain-btn" data-index="${index}" style="margin-top: 4px; font-size: 12px;">Explain</button>
-            <button class="like-btn" data-joke="${encodeURIComponent(item.joke)}" style="margin-top: 4px; font-size: 12px; background-color: #222; border: 1px solid #ffcc00; color: #ffcc00; padding: 4px 10px; border-radius: 8px; cursor: pointer;">👍 Like</button>
-          </div>
+    <div class="joke-item" style="display: flex; flex-direction: row; align-items: flex-start; position: relative; min-height: 60px; padding: 14px;">
+      <div class="joke-content" style="flex: 1; padding-right: 80px;">
+        <div id="joke-preview-${jokeId}" class="joke-preview ${isLongJoke ? 'collapsible' : ''}">
+          😂 ${item.joke}
         </div>
-      </li>`;
+        ${isLongJoke ?
+              `<button class="expand-button" onclick="toggleJokeExpansion(this, '${jokeId}')">
+            Show More <i class="fas fa-chevron-down"></i>
+          </button>` : ''}
+        <div class="latent-box" id="latent-${index}" style="display: none; background: #222; border-left: 3px solid #ffcc00; padding: 10px 16px; border-radius: 6px; margin-top: 10px;">
+  <strong style="color: #ffcc00;">Why This Joke Matched Your Search:</strong>
+  <div style="margin-top: 10px;">
+    <p style="font-size: 14px; color: #ccc; text-align: left;">This joke matched your query based on these top semantic dimensions:</p>
+    <ol style="margin: 8px 0; color: #ccc; font-size: 14px; text-align: left; padding-left: 20px;">
+      ${item.latent_dimensions ?
+              `<div class="dimension-list" id="dimension-list-${index}">Loading dimensions...</div>` :
+              '<li>No dimension information available</li>'}
+    </ol>
+  </div>
+</div>
+      <div class="score-container" style="position: absolute; top: 14px; right: 14px; text-align: center;">
+        <span class="score-badge" style="background-color: #ff0066; color: white; padding: 4px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;">Score: ${item.score.toFixed(2)}</span><br/>
+        <button class="explain-btn" data-index="${index}" data-joke="${encodeURIComponent(item.joke)}" style="margin-top: 4px; font-size: 12px;">Explain</button>
+        <button class="like-btn" data-joke="${encodeURIComponent(item.joke)}" style="margin-top: 4px; font-size: 12px; background-color: #222; border: 1px solid #ffcc00; color: #ffcc00; padding: 4px 10px; border-radius: 8px; cursor: pointer;">👍 Like</button>
+      </div>
+    </div>
+  </li>`;
         }).join('');
       } else {
         content += "<li><div class='joke-item'>No jokes found. Try a different search.</div></li>";
@@ -120,6 +124,59 @@
       content += "</ul></div>";
       return content;
     }
+
+    document.addEventListener("click", function (e) {
+      if (e.target && e.target.classList.contains("explain-btn")) {
+        const index = e.target.getAttribute("data-index");
+        const jokeText = decodeURIComponent(e.target.getAttribute("data-joke"));
+        const latentBox = document.getElementById(`latent-${index}`);
+
+        if (latentBox) {
+          const isVisible = latentBox.style.display === "block";
+
+          if (!isVisible) {
+            latentBox.style.display = "block";
+            e.target.textContent = "Hide Explanation";
+
+            const query = lastSearchQuery;
+            fetch("/explanation", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ query, joke_text: jokeText })
+            })
+              .then(response => response.json())
+              .then(result => {
+                if (result.error) {
+                  document.getElementById(`dimension-list-${index}`).innerHTML =
+                    `<li style="color: #ff6666;">Error: ${result.error}</li>`;
+                  return;
+                }
+
+                if (result.labeled_dimensions && result.labeled_dimensions.length > 0) {
+                  const topDimensions = result.labeled_dimensions.slice(0, 5);
+
+                  const dimensionList = topDimensions.map(dim =>
+                    `<li><strong style="color: #ffcc00;">${dim.label}</strong>: ${(dim.value * 100).toFixed(1)}%</li>`
+                  ).join('');
+
+                  document.getElementById(`dimension-list-${index}`).innerHTML = dimensionList;
+                } else {
+                  document.getElementById(`dimension-list-${index}`).innerHTML =
+                    '<li>No dimension information available</li>';
+                }
+              })
+              .catch(error => {
+                console.error("Error fetching explanation:", error);
+                document.getElementById(`dimension-list-${index}`).innerHTML =
+                  '<li style="color: #ff6666;">Failed to load explanation. Please try again.</li>';
+              });
+          } else {
+            latentBox.style.display = "none";
+            e.target.textContent = "Explain";
+          }
+        }
+      }
+    });
 
     function filterText() {
       document.getElementById("answer-box").innerHTML = "";
@@ -185,18 +242,6 @@
         document.getElementById("keywordListDiv").innerHTML = "<div class='error'>Could not load explanation.</div>";
       }
     }
-
-    document.addEventListener("click", function (e) {
-      if (e.target && e.target.classList.contains("explain-btn")) {
-        const index = e.target.getAttribute("data-index");
-        const latentBox = document.getElementById(`latent-${index}`);
-        if (latentBox) {
-          const isVisible = latentBox.style.display === "block";
-          latentBox.style.display = isVisible ? "none" : "block";
-          e.target.textContent = isVisible ? "Explain" : "Hide";
-        }
-      }
-    });
 
     document.addEventListener('DOMContentLoaded', function () {
       document.getElementById('filter-text-val').addEventListener('keypress', function (event) {

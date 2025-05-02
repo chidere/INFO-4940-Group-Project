@@ -79,7 +79,7 @@ def search_jokes():
             jokes_with_scores.append({
                 "joke": joke_text,
                 "score": joke.get('score', 1.0),
-                "latent_dimensions": joke.get("latent_dimensions", [])  # ✅ Now included
+                "latent_dimensions": joke.get("latent_dimensions", [])  
             })
         return jsonify({ "jokes_with_scores": jokes_with_scores })
     except Exception as e:
@@ -152,11 +152,39 @@ def explain():
         top_values = [normalized[i] for i in top_indices]
 
         feature_names = joke_ranker.vectorizer.get_feature_names_out()
-        component_words = []
-        for i in top_indices:
-            top_word_indices = np.argsort(joke_ranker.reducer.components_[i])[-1:]
-            label = feature_names[top_word_indices[0]]
-            component_words.append(label)
+        
+        joke_words = set(preprocess(joke_text).split())
+        query_words = set(cleaned_query.split())
+        
+        shared_words = joke_words.intersection(query_words)
+        important_words = list(shared_words)
+        
+        if len(important_words) < 10:
+            joke_vec = joke_ranker.vectorizer.transform([preprocess(joke_text)])
+            joke_features = joke_vec.nonzero()[1]
+            joke_scores = [(feature_names[i], joke_vec[0, i]) for i in joke_features]
+            joke_scores.sort(key=lambda x: x[1], reverse=True)
+            
+            for word, _ in joke_scores:
+                if word not in important_words:
+                    important_words.append(word)
+                if len(important_words) >= 10:
+                    break
+        
+        if len(important_words) < len(top_indices):
+            for i in range(len(important_words), len(top_indices)):
+                important_words.append(f"Dimension {i+1}")
+        
+        component_words = important_words[:len(top_indices)]
+        labeled_dimensions = []
+        
+        for i, idx in enumerate(top_indices):
+            label = component_words[i]
+            labeled_dimensions.append({
+                "label": label,
+                "value": float(top_values[i]),
+                "dimension_index": int(idx)
+            })
 
         if not top_values or not component_words:
             return jsonify({
@@ -171,7 +199,8 @@ def explain():
                         "x": 0.5, "y": 0.5,
                         "xanchor": "center", "yanchor": "middle"
                     }]
-                }
+                },
+                "labeled_dimensions": []
             })
 
         fig = go.Figure(data=go.Scatterpolar(
@@ -187,12 +216,13 @@ def explain():
             showlegend=False
         )
 
-        return jsonify(fig.to_dict())
+        result = fig.to_dict()
+        result["labeled_dimensions"] = labeled_dimensions
+        return jsonify(result)
 
     except Exception as e:
         print("Explanation error:", e)
         return jsonify({ "error": str(e) }), 500
-
 
 joke_votes = {}
 
